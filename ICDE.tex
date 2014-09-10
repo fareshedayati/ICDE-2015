@@ -382,13 +382,13 @@
 
 \begin{abstract}
 
-Many machine learning tasks involve sparsely representable input space, such as
-text data. State-of-the-art tree-based ensemble algorithms and implementation
-have focused on tasks with dense input space, while at most emulating random
-memory access on sparse input data. We propose a fast and an efficient
-splitting algorithm to leverage input sparsity within decision tree methods. We
-exploit the a-priori knowledge that each column have very few non-zero
-elements and show how learning time is significantly decreased.
+Many machine learning tasks involve sparsely representable input space. State-
+of-the-art tree-based ensemble algorithms and implementation have focused on
+tasks with dense input space, while at most emulating random memory access on
+sparse input data. We propose a fast and an efficient splitting algorithm to
+leverage input sparsity within decision tree methods. We exploit the a-priori
+knowledge that each column have very few non-zero elements and show how
+learning time is significantly decreased.
 
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
@@ -413,38 +413,54 @@ elements and show how learning time is significantly decreased.
 \section{Introduction}
 % no \IEEEPARstart
 
-Decision trees along with their ensemble variations such as Adaboost, Random
-Forest and Gradient Boosting are some of the most robust and widely-used
-supervised machine learning and data mining techniques
-\cite{breiman1984classification}, \cite{friedman2001greedy,freund1995desicion},
-\cite{breiman2001random}. Decision trees can be used both in classification and
-regression problems. A tree is a flowchart structure that guides the input
-feature vector from the root to a leaf; and the leaf contains the necessary
-information for predicting the target variable. The root and each intermediate
-inner node correspond to a feature and a splitting criterion that determine the
-path of the input down the tree. As learning a tree from training dataset is
-known to be NP-complete \cite{hyafil1976constructing}, a heuristic is used
-instead. The training dataset is recursively split into homogenous
-parts\cite{breiman1984classification}. For the case of classification with
-numerical features the training data is recursively partitioned into two parts
-by picking a single feature and a threshold that can best split the data into
-two homogenous groups in terms of the target variable. The optimality of the
-split can be determined by different splitting scores, information gain and
-Gini impurity are popular choices. Finding the best threshold of a feature
-requires sorting the dataset along the feature and computing the splitting
-score for all distinct feature values.
+High dimensional supervised learning problems, e.g. in text processing or image
+exploitation, are more frequent than ever. While those datasets have very high
+dimensional input space, they are often sparsely representable. For instance,
+the number of unique words associated to a text document is actually small
+compared to the total number of words of a given language. In order to work
+efficiently sparsely representable data, efficient matrix formats have been
+developed such as compressed sparse column matrix format with fast matrix
+operations, such as dot product, with a low memory footprint.
 
-Currently decision trees do not support sparse input in \emph{scikit-learn}
-\cite{buitinck2013api,pedregosa2011scikit} and many other packages; the input
-is required to be densified first. Memory is not the only challenge, training
-time is the real predicament. Training decision trees on datasets with a large
-feature dimension such as textual datasets is a challenge as the dataset needs
-to be sorted along most of the features at least once. We exploit sparsity of
-features to avoid sorting the entire dataset; only nonzero parts of a feature
-are sorted and the dataset is rearranged accordingly. Moreover datasets are
-stored in a column-wise sparsely-represented matrix for memory efficiency.
+Tree-based ensemble models, such as adaboost \cite{freund1995desicion}, random
+forest \cite{breiman2001random} or gradient tree boosting
+\cite{friedman2001greedy}, are some of the most robust and widely-used
+supervised machine learning. Randomized decision trees
+\cite{breiman1984classification} are built on all or a bootstrap copy of the
+samples by recursively maximizing the reduction of an impurity measure, e.g.
+the output variance. At each node, the best split is selected among $k$
+randomly selected features. This recursive procedure is repeated until a
+stopping condition is met, e.g. a maximal depth is reached or there are too few
+samples to split. Leaves are labeled by the mean in regression or by the class
+frequencies in classification with reaching training samples. Predictions will
+be made by aggregating the the prediction of each tree of the ensemble.
 
-\section{Decision Trees}
+Many models, such as linear or nearest neighbors model, could directly benefit
+from the input sparsity by formulating the entire algorithm through a set of
+dot products. Since this is not possible for tree based methods, most machine
+learning package doesn't support sparse input for tree-based methods, are
+restricted to decision stump, decision tree with only one internal node or have
+sub-optimal implementation through the simulation of random access memory as in
+the dense case. The only solution is often to densified the input space which
+leads first to severe memory constraints and then to very slow training time.
+
+In this paper, we present an efficient splitting procedure tailored for
+numerical sparse input data in compressed sparse column format. For a given
+subset of samples, we are able to efficiently extract non zero values for a
+given feature of this subset of samples. Knowing which elements are non zeros
+allows large speed up by reducing the number of possible split to evaluate at
+each node. We also want to highlight that the contribution of this paper have
+been proposed to inclusion to the  \emph{scikit-learn}
+\cite{buitinck2013api,pedregosa2011scikit} open source package in order to make
+profit to the machine learning community.
+
+The rest of this paper is organized as follows: Section \ref{sec:background}
+introduces decision tree splitting algorithm; Section \ref{sec:sparse-input-dt}
+describe the proposed splitting algorithm for sparse input data; Section
+\ref{sec:experiments} provides our empirical implementation study and Section
+\ref{sec:conclusion} concludes and describes further perspectives.
+
+\section{Background: decision tree} \label{sec:background}
 
 In this section we briefly go over training decision trees and in the next
 section we will show how to tweak this algorithm for support of sparse inputs.
@@ -470,14 +486,14 @@ information gain. Our change works well with all tree variations. For more
 details refer to the latest merge in \emph{scikit-learn} in the tree and
 random-forests sections \cite{scikit-learn}.
 
- To avoid rearranging the whole matrix at the time of sorting, we use an
- auxiliary data structure \emph{samples} to rearrange the indices of the
- training dataset only, keeping $X$ and $Y$ unchanged. Initially
- $samples[i] = i$ for $i \in \{0,1,\cdots, n-1\}$, where $n$ is the number of
- training instances. Each node is specified by two numbers $start$ and $end$.
- These two numbers along with $samples$ specifies the indices of $X, Y$ that
-  are in the current node: $samples[start:end]$. Note that we use this name to
-  be consistent with \emph{scikit-learn} \cite{scikit-learn}.
+To avoid rearranging the whole matrix at the time of sorting, we use an
+auxiliary data structure \emph{samples} to rearrange the indices of the
+training dataset only, keeping $X$ and $Y$ unchanged. Initially
+$samples[i] = i$ for $i \in \{0,1,\cdots, n-1\}$, where $n$ is the number of
+training instances. Each node is specified by two numbers $start$ and $end$.
+These two numbers along with $samples$ specifies the indices of $X, Y$ that
+are in the current node: $samples[start:end]$. Note that we use this name to
+be consistent with \emph{scikit-learn} \cite{scikit-learn}.
 
 \begin{algorithmic}
 \Function{FIT}{$start =0, end = n, Node, depth$}
@@ -541,6 +557,9 @@ random-forests sections \cite{scikit-learn}.
 \EndFunction
 \end{algorithmic}
 \section{Sparsified Decision Trees}
+
+
+\section{Decision on sparse input data} \label{sec:sparse-input-dt}
 
 
 For memory efficiency and taking advantage of sparsity we use a data structure
@@ -623,7 +642,7 @@ for the candidate feature $f$:
 \EndIf
 \end{algorithmic}
 
-\section{Results}
+\section{Experiments} \label{sec:experiments}
 
 The first test was carried on the \emph{20 Newsgroups} dataset. The dataset
 consists of $20000$ news groups documents distributed across $20$ newsgroups
@@ -676,7 +695,7 @@ Dataset Size	&	Feature Size	&	density	&	 Sparse Input	&	Dense Input	\\
 \end{tabular}
 \end{table}
 
-\section{Conclusion}
+\section{Conclusion}\label{sec:conclusion}
 The conclusion goes here.
 
 \section*{Acknowledgment} % use section* for acknowledgement
