@@ -439,10 +439,11 @@ Many models, such as linear or nearest neighbors model, could directly benefit
 from the input sparsity by formulating the entire algorithm through a set of
 dot products. Since this is not possible for tree based methods, most machine
 learning package doesn't support sparse input for tree-based methods, are
-restricted to decision stump, decision tree with only one internal node or have
-sub-optimal implementation through the simulation of random access memory as in
-the dense case. The only solution is often to densified the input space which
-leads first to severe memory constraints and then to very slow training time.
+restricted to decision stump (decision tree with only one internal node) or
+have sub-optimal implementation through the simulation of a random access
+memory as in the dense case. The only solution is often to densified the input
+space which leads first to severe memory constraints and then to very slow
+training time.
 
 In this paper, we present an efficient splitting procedure tailored for
 numerical sparse input data in compressed sparse column format. For a given
