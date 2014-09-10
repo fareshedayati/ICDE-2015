@@ -381,18 +381,15 @@
 \maketitle
 
 \begin{abstract}
-Many machine learning techniques such as logistic regression support sparse
-inputs and work very efficiently with them. Decision trees however do not
-support sparse input feature. We propose a fast and efficient way of training
-decision trees on sparse datasets. Sorting datasets along features for finding
-the best possible split is a very expensive and at ‡the same time an essential
-component in training decision trees. Sorting is specially costly when working
-with textual data or any dataset with gigantic feature dimensions. At the heart
-of our training algorithm lies working with matrices with sparsely represented
-columns and limited sorting of non-zero parts of columns. We have implemented
-this method and merged it into the machine learning package \emph{scikit-
-learn}. Our method adds sparse input support to the existing tree training
-algorithms with a significant decrease in the training time.
+
+Many machine learning tasks involve sparsely representable input space, such as
+text data. State-of-the-art tree-based ensemble algorithms and implementation
+have focused on tasks with dense input space, while at most emulating random
+memory access on sparse input data. We propose a fast and an efficient
+splitting algorithm to leverage input sparsity within decision tree methods. We
+exploit the a-priori knowledge that each column have very few non-zero
+elements and show how learning time is significantly decreased.
+
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
 % This preserves the distinction between vectors and scalars. However,
