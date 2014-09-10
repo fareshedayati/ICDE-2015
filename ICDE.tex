@@ -97,11 +97,6 @@
 % When switching from latex to pdflatex and vice-versa, the compiler may
 % have to be run twice to clear warning/error messages.
 
-
-
-
-
-
 % *** CITATION PACKAGES ***
 %
 %\usepackage{cite}
@@ -126,8 +121,6 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true}
-
-
 
 
 %\usepackage[]{algorithm2e}
@@ -330,7 +323,6 @@
 % correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
 
-\begin{document}
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
@@ -340,21 +332,25 @@
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
-\author{\IEEEauthorblockN{Fares Hedayati}
+\author{
+\IEEEauthorblockN{Fares Hedayati}
 \IEEEauthorblockA{Elance-oDesk\\
-Dept. of Data Science\\
-441 Logue Ave, Mountain View, CA 94043\\
-Email: fares19@elance-odesk.com}
+                  Dept. of Data Science\\
+                  441 Logue Ave, Mountain View, CA 94043\\
+                  Email: fares19@elance-odesk.com}
+\and
 \IEEEauthorblockN{Arnaud Joly}
-\IEEEauthorblockA{University of Liège\\
-Belgium\\
-Email: a.joly@ulg.ac.be
+\IEEEauthorblockA{Dept. of EE & CS & GIGA-R\\
+                  University of Liège\\
+                  Belgium\\
+                  Email: a.joly@ulg.ac.be
 }
+\and
 \IEEEauthorblockN{Panagiotis Papadimitriou}
 \IEEEauthorblockA{Elance-oDesk\\
-Dept. of Data Science\\
-441 Logue Ave, Mountain View, CA 94043\\
-Email: papadimitriou@elance-odesk.com}\\\\
+                  Dept. of Data Science\\
+                  441 Logue Ave, Mountain View, CA 94043\\
+                  Email: papadimitriou@elance-odesk.com}
 }
 
 % conference papers do not typically use \thanks and this command
@@ -383,8 +379,8 @@ Email: papadimitriou@elance-odesk.com}\\\\
 %\IEEEspecialpapernotice{(Invited Paper)}
 
 % make the title area
+\begin{document}
 \maketitle
-
 
 \begin{abstract}
 Many machine learning techniques such as logistic regression support sparse
