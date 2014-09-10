@@ -20,7 +20,7 @@
 %% Legal Notice:
 %% This code is offered as-is without any warranty either expressed or
 %% implied; without even the implied warranty of MERCHANTABILITY or
-%% FITNESS FOR A PARTICULAR PURPOSE! 
+%% FITNESS FOR A PARTICULAR PURPOSE!
 %% User assumes all risk.
 %% In no event shall IEEE or any contributor to this code be liable for
 %% any damages or losses, including, but not limited to, incidental,
@@ -156,7 +156,7 @@
 % graphicx was written by David Carlisle and Sebastian Rahtz. It is
 % required if you want graphics, photos, etc. graphicx.sty is already
 % installed on most LaTeX systems. The latest version and documentation can
-% be obtained at: 
+% be obtained at:
 % http://www.ctan.org/tex-archive/macros/latex/required/graphics/
 % Another good source of documentation is "Using Imported Graphics in
 % LaTeX2e" by Keith Reckdahl which can be found as epslatex.ps or
@@ -281,7 +281,7 @@
 % IEEEtran.cls handling of captions and this will result in nonIEEE style
 % figure/table captions. To prevent this problem, be sure and preload
 % caption.sty with its "caption=false" package option. This is will preserve
-% IEEEtran.cls handing of captions. Version 1.3 (2005/06/28) and later 
+% IEEEtran.cls handing of captions. Version 1.3 (2005/06/28) and later
 % (recommended due to many improvements over 1.2) of subfig.sty supports
 % the caption=false option directly:
 %\usepackage[caption=false,font=footnotesize]{subfig}
@@ -394,10 +394,10 @@ Email: papadimitriou@elance-odesk.com}\\\\
 
 % for over three affiliations, or if they all won't fit within the width
 % of the page, use this alternative format:
-% 
+%
 %\author{\IEEEauthorblockN{Michael Shell\IEEEauthorrefmark{1},
 %Homer Simpson\IEEEauthorrefmark{2},
-%James Kirk\IEEEauthorrefmark{3}, 
+%James Kirk\IEEEauthorrefmark{3},
 %Montgomery Scott\IEEEauthorrefmark{3} and
 %Eldon Tyrell\IEEEauthorrefmark{4}}
 %\IEEEauthorblockA{\IEEEauthorrefmark{1}School of Electrical and Computer Engineering\\
@@ -455,34 +455,34 @@ Many machine learning techniques such as logistic regression support sparse inpu
 
 \section{Introduction}
 % no \IEEEPARstart
-Decision trees along with their ensemble variations such as Adaboost, Random Forest and Gradient Boosting are some of the most robust and widely-used supervised machine learning and data mining techniques \cite{tree}, \cite{adaboost}, \cite{forest}. Decision trees can be used both in classification and regression problems. A tree is a flowchart structure that guides the input feature vector from the root to a leaf; and the leaf contains the necessary information for predicting the target variable. The root and each intermediate inner node correspond to a feature and a splitting criterion that determine the path of the input down the tree. As learning a tree from training dataset is known to be NP-complete \cite{np-comlete}, a heuristic is used instead. The training dataset is recursively split into homogenous parts\cite{tree}. For the case of classification with numerical features the training data is recursively partitioned into two parts by picking a single feature and a threshold that can best split the data into two homogenous groups in terms of the target variable. The optimality of the split can be determined by different splitting scores, information gain and Gini impurity are popular choices \cite{information gain}. Finding the best threshold of a feature requires sorting the dataset along the feature and computing the splitting score for all distinct feature values. 
+Decision trees along with their ensemble variations such as Adaboost, Random Forest and Gradient Boosting are some of the most robust and widely-used supervised machine learning and data mining techniques \cite{breiman1984classification}, \cite{friedman2001greedy,freund1995desicion}, \cite{breiman2001random}. Decision trees can be used both in classification and regression problems. A tree is a flowchart structure that guides the input feature vector from the root to a leaf; and the leaf contains the necessary information for predicting the target variable. The root and each intermediate inner node correspond to a feature and a splitting criterion that determine the path of the input down the tree. As learning a tree from training dataset is known to be NP-complete \cite{hyafil1976constructing}, a heuristic is used instead. The training dataset is recursively split into homogenous parts\cite{breiman1984classification}. For the case of classification with numerical features the training data is recursively partitioned into two parts by picking a single feature and a threshold that can best split the data into two homogenous groups in terms of the target variable. The optimality of the split can be determined by different splitting scores, information gain and Gini impurity are popular choices. Finding the best threshold of a feature requires sorting the dataset along the feature and computing the splitting score for all distinct feature values.
 
-Currently decision trees do not support sparse input in \emph{scikit-learn} \cite{scikit-learn} and many other packages; the input is required to be densified first. Memory is not the only challenge, training time is the real predicament. Training decision trees on datasets with a large feature dimension such as textual datasets is a challenge as the dataset needs to be sorted along most of the features at least once. We exploit sparsity of features to avoid sorting the entire dataset; only nonzero parts of a feature are sorted and the dataset is rearranged accordingly. Moreover datasets are stored in a column-wise sparsely-represented matrix for memory efficiency. 
-\section{Decision Trees} 
-In this section we briefly go over training decision trees and in the next section we will show how to tweak this algorithm for support of sparse inputs. Let $X$ be a matrix of dimension $n \times d$ where $d$ is the dimension of the feature space and $n$ is the number of training instances, i.e. each row corresponds to an instance and each column corresponds to a feature. Moreover we let $Y$ be a vector of size $n$ that contains the target variables, e.g. the target variable of instance $i$ is at $Y[i]$. Note that the in the function \emph{FIT} below, $min\_samples\_split$, $min\_samples\_leaf$ and $max\_depth$ are regularization parameters for prevention of overfitting. $min\_samples\_split$ is the minimum number of training instances required in a node before a split is carried on the node, $min\_samples\_leaf$ is the minimum number of instances required in the node and $max\_depth$ is the maximum depth of the tree. As soon as there are too few instances in the current node or the best split of the current node leave at least one of the children with too few instances or the tree becomes too deep no further splitting is carried out and the current node becomes a leaf node. The tree can be grown alternatively in a best-first search manner in which case $max\_leaf\_nodes$ is needed as well. $max\_features$, $splitter$ and $criterion$ are other parameters of the model. Since our tweak is independent of these parameters we only cover training decision trees for classification in a depth-first search manner with information gain. Our change works well with all tree variations. For more details refer to the latest merge in \emph{scikit-learn} in the tree and random-forests sections \cite{scikit-learn}. 
- 
+Currently decision trees do not support sparse input in \emph{scikit-learn} \cite{buitinck2013api,pedregosa2011scikit} and many other packages; the input is required to be densified first. Memory is not the only challenge, training time is the real predicament. Training decision trees on datasets with a large feature dimension such as textual datasets is a challenge as the dataset needs to be sorted along most of the features at least once. We exploit sparsity of features to avoid sorting the entire dataset; only nonzero parts of a feature are sorted and the dataset is rearranged accordingly. Moreover datasets are stored in a column-wise sparsely-represented matrix for memory efficiency.
+\section{Decision Trees}
+In this section we briefly go over training decision trees and in the next section we will show how to tweak this algorithm for support of sparse inputs. Let $X$ be a matrix of dimension $n \times d$ where $d$ is the dimension of the feature space and $n$ is the number of training instances, i.e. each row corresponds to an instance and each column corresponds to a feature. Moreover we let $Y$ be a vector of size $n$ that contains the target variables, e.g. the target variable of instance $i$ is at $Y[i]$. Note that the in the function \emph{FIT} below, $min\_samples\_split$, $min\_samples\_leaf$ and $max\_depth$ are regularization parameters for prevention of overfitting. $min\_samples\_split$ is the minimum number of training instances required in a node before a split is carried on the node, $min\_samples\_leaf$ is the minimum number of instances required in the node and $max\_depth$ is the maximum depth of the tree. As soon as there are too few instances in the current node or the best split of the current node leave at least one of the children with too few instances or the tree becomes too deep no further splitting is carried out and the current node becomes a leaf node. The tree can be grown alternatively in a best-first search manner in which case $max\_leaf\_nodes$ is needed as well. $max\_features$, $splitter$ and $criterion$ are other parameters of the model. Since our tweak is independent of these parameters we only cover training decision trees for classification in a depth-first search manner with information gain. Our change works well with all tree variations. For more details refer to the latest merge in \emph{scikit-learn} in the tree and random-forests sections \cite{scikit-learn}.
+
  To avoid rearranging the whole matrix at the time of sorting, we use an auxiliary data structure \emph{samples} to rearrange the indices of the training dataset only, keeping $X$ and $Y$ unchanged. Initially $samples[i] = i$ for $i \in \{0,1,\cdots, n-1\}$, where $n$ is the number of training instances. Each node is specified by two numbers $start$ and $end$. These two numbers along with $samples$ specifies the indices of $X, Y$ that are in the current node: $samples[start:end]$. Note that we use this name to be consistent with \emph{scikit-learn} \cite{scikit-learn}. \\
 
 \begin{algorithmic}
-\Function{FIT}{$start =0, end = n, Node, depth$} 
+\Function{FIT}{$start =0, end = n, Node, depth$}
 \If {$|end - start| < min\_samples\_split$ or $depth > max\_depth$ }
 \State $Node.IsLeaf = True$
-\State $Node.Class = \,\,Most\,\, frequent\,\,$ 
+\State $Node.Class = \,\,Most\,\, frequent\,\,$
 \State $\,\,\,\,\,class \,\,of\,\, Y[samples[start:end]]$
 \State \Return $Node$
-\EndIf 
+\EndIf
 \State $f, t = BestSplit(start, end)$\\
 \State \emph{Rearrange $samples[start:end]$}
 \State \emph{such that instances in $samples[start:end]$}
 \State \emph{with feature $f$ less than $t$ are before}
 \State \emph{those that are great than $t$.}
 \State \emph{Let $mid$ be an index in the rearranged samples}
-\State \emph{such that $X[samples[start:mid], f]$} are less than 
+\State \emph{such that $X[samples[start:mid], f]$} are less than
 \State \emph{$X[samples[mid:end], f]$}\\
 
 \If {$|mid - start |$ or $|end - mid| <min\_samples\_leaf$}
 \State $Node.IsLeaf = True$
-\State $Node.Class = \,\,Most\,\, frequent\,\,$ 
+\State $Node.Class = \,\,Most\,\, frequent\,\,$
 \State $\,\,\,\,\,class \,\,of\,\, Y[samples[start:end]]$
 \State \Return $Node$
 \EndIf
@@ -490,21 +490,21 @@ In this section we briefly go over training decision trees and in the next secti
 \State $Node.Threshold = t$
 \State $Node.LeftNode = new \,\, Node()$
 \State $Node.RightNode = new \,\, Node()$
-\State FIT($start, mid, Node.LeftNode, depth+1$) 
+\State FIT($start, mid, Node.LeftNode, depth+1$)
 \State FIT($mid, end, Node.RightNode, depth+1$)
 \State\Return $Node$
 \EndFunction
-\Function{BestSplit}{start, end} 
+\Function{BestSplit}{start, end}
 \State $BestThreshold = 0$
 \State $BestScore = -\infty$
 \State $BestFeature = 0$
 \For{$f \in \{1, \cdots, d\}$}
-\State $Sort(X, samples, f, start, end)$ 
+\State $Sort(X, samples, f, start, end)$
 \For{$i \in [start+1:end] $}
 \State $t = X[samples[i], f]$
 \State $Y_L = Y[samples[start:i]]$
-\State $Y_R = Y[samples[i:end]]$. 
-\State $H_L = \mbox{H}(Y_L)$ 
+\State $Y_R = Y[samples[i:end]]$.
+\State $H_L = \mbox{H}(Y_L)$
 \State $H_R = \mbox{H}(Y_R)$
 \State $S = H(Y) - \left(\frac{|i - start|}{|end - start|} H_L+\frac{|end - i|}{|end - start|}H_R\right)$
 \State Where $H(\,\cdot\,)$ is the entropy
@@ -518,21 +518,21 @@ In this section we briefly go over training decision trees and in the next secti
 \EndFor \\
 \Return $BestFeature, BestThreshold$
 \EndFunction
-\Function{Sort}{$X, samples, f, start, end$ } 
+\Function{Sort}{$X, samples, f, start, end$ }
 \State \emph{Rearrange $samples[start:end]$}
-\State \emph{by sorting $X[samples[start:end], f]$,} 
+\State \emph{by sorting $X[samples[start:end], f]$,}
 \State \emph{keep $X$ and $Y$ unchanged.}\\
 \EndFunction
 \end{algorithmic}
-\section{Sparsified Decision Trees} 
+\section{Sparsified Decision Trees}
 
 
-For memory efficiency and taking advantage of sparsity we use a data structure called \emph{scipy.sparse.csc\_matrix}. This data structure has a common use in \emph{scikit-learn}. It consists of four parts: \emph{indices}, \emph{indptr}, \emph{data} and $shape$ which contains the dimensions of the matrix. The indices for column $f$ are stored in: 
+For memory efficiency and taking advantage of sparsity we use a data structure called \emph{scipy.sparse.csc\_matrix}. This data structure has a common use in \emph{scikit-learn}. It consists of four parts: \emph{indices}, \emph{indptr}, \emph{data} and $shape$ which contains the dimensions of the matrix. The indices for column $f$ are stored in:
 
 \begin{equation}
 indices[indptr[f]:indptr[f+1]],
 \end{equation}
-with the corresponding values at 
+with the corresponding values at
 \begin{equation}
 data[indptr[f]:indptr[f+1]].
 \end{equation}
@@ -547,11 +547,11 @@ $\,\, 0, 0, 5$\\
 $\,\,2, 3, 6]$\\
 
 
-The only part of the $BestFit$ algorithm of the previous section that changes is the way we sort the training matrix along a feature. For a given feature $f$ we first find all instances in $samples[start:end]$ where feature $f$ is non-zero. We, then sort the positive and negative parts separately and rearrange $samples[start:end]$ accordingly. 
+The only part of the $BestFit$ algorithm of the previous section that changes is the way we sort the training matrix along a feature. For a given feature $f$ we first find all instances in $samples[start:end]$ where feature $f$ is non-zero. We, then sort the positive and negative parts separately and rearrange $samples[start:end]$ accordingly.
 
-The challenge in finding instances in $samples[start:end]$ with non-zero values of $f$ is that of finding the intersection of $indices[indptr[f]:indptr[f+1]]$ and $samples[start:end]$. Depending on the size of these two sets we can either perform a binary search or an exhaustive search. For the latter end we need an additional auxiliary data structure that we call $index\_to\_samples$ which is a reverse map of $samples$ to its indices, i.e. $index\_to\_samples[j] = i$ when $samples[i] = j$. 
+The challenge in finding instances in $samples[start:end]$ with non-zero values of $f$ is that of finding the intersection of $indices[indptr[f]:indptr[f+1]]$ and $samples[start:end]$. Depending on the size of these two sets we can either perform a binary search or an exhaustive search. For the latter end we need an additional auxiliary data structure that we call $index\_to\_samples$ which is a reverse map of $samples$ to its indices, i.e. $index\_to\_samples[j] = i$ when $samples[i] = j$.
 
-If the size of the current node, i.e. $end - start$, is small then we can sort $samples[start:end]$ and for each instance in $samples[start:end]$ do a binary search in $indices[indptr[f]:indptr[f+1]]$, this way we can find the intersection of two sets which is the set of instance of the current node with non-zero values of feature $f$. On the other hand if the size of the current node is large, sorting the set might be costly and we do an exhaustive search instead. Note that we always keep $index\_to\_samples$ up-to-date. For each instance $index$ in $indices[indptr[f]:indptr[f+1]]$ if $index\_to\_samples[index]$ is not between $start$ and $end$ then that instance is not in the current node. So we only keep instances in $indices[indptr[f]:indptr[f+1]]$ when their corresponding $index\_to\_samples$ is between $start$ and $end$. 
+If the size of the current node, i.e. $end - start$, is small then we can sort $samples[start:end]$ and for each instance in $samples[start:end]$ do a binary search in $indices[indptr[f]:indptr[f+1]]$, this way we can find the intersection of two sets which is the set of instance of the current node with non-zero values of feature $f$. On the other hand if the size of the current node is large, sorting the set might be costly and we do an exhaustive search instead. Note that we always keep $index\_to\_samples$ up-to-date. For each instance $index$ in $indices[indptr[f]:indptr[f+1]]$ if $index\_to\_samples[index]$ is not between $start$ and $end$ then that instance is not in the current node. So we only keep instances in $indices[indptr[f]:indptr[f+1]]$ when their corresponding $index\_to\_samples$ is between $start$ and $end$.
 
 We define the following two variables for the current feature $f$
 \begin{equation}
@@ -561,22 +561,22 @@ n\_indices = indptr[f+1] - indptr[f]
 n\_samples = end - start.
 \end{equation}
 
-Sorting of $samples[start:end]$ takes $O(n\_samples \times \log(n\_samples))$ and binary search of instances of $samples[start:end]$ in $indices[indptr[f]:indptr[f+1]]$ takes $O(n\_samples \times \log(n\_indices))$. Sorting of $samples[start:end]$ happens only once in a $BestSplit$ call for all candidate features, and the binary search happens for each candidate feature. On the other hand, the exhaustive search takes $O(n\_indices)$ time. 
-We let $C$ be:  
+Sorting of $samples[start:end]$ takes $O(n\_samples \times \log(n\_samples))$ and binary search of instances of $samples[start:end]$ in $indices[indptr[f]:indptr[f+1]]$ takes $O(n\_samples \times \log(n\_indices))$. Sorting of $samples[start:end]$ happens only once in a $BestSplit$ call for all candidate features, and the binary search happens for each candidate feature. On the other hand, the exhaustive search takes $O(n\_indices)$ time.
+We let $C$ be:
 $$
-n\_samples  \times \log(n\_samples) + n\_samples \times \log(n\_indices) 
+n\_samples  \times \log(n\_samples) + n\_samples \times \log(n\_indices)
 $$
-After testing with different coefficients we came up with the following rule for the candidate feature $f$: 
+After testing with different coefficients we came up with the following rule for the candidate feature $f$:
 
 \begin{algorithmic}
 \If{$C  < 0.1 \times n\_indices \,\, $}
 \State \emph{ First sort $samples[start:end]$ if it is not already sorted, then for each instance in $samples[start:end]$ carry on a binary search in $indices[indptr[f]:indptr[f+1]]$}
-\Else 
+\Else
 \State \emph{For each index in $indices[indptr[f]:indptr[f+1]]$ check if its in $samples[start:end]$ by verifying that its $index\_to\_samples$ is between $start$ and $end$.}
 \EndIf
 \end{algorithmic}
 
- 
+
 
 %\hzfill mds
 %\hfill January 11, 2007
@@ -598,7 +598,7 @@ After testing with different coefficients we came up with the following rule for
 %\begin{figure}[!t]
 %\centering
 %\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex, 
+% where an .eps filename suffix will be assumed under latex,
 % and a .pdf suffix will be assumed for pdflatex; or what has been declared
 % via \DeclareGraphicsExtensions.
 %\caption{Simulation Results}
@@ -632,7 +632,7 @@ After testing with different coefficients we came up with the following rule for
 % reference/describe all of them (a), (b), etc., within the main caption.
 
 
-% An example of a floating table. Note that, for IEEE style tables, the 
+% An example of a floating table. Note that, for IEEE style tables, the
 % \caption command should come BEFORE the table. Table text will default to
 % \footnotesize as IEEE normally uses this smaller font for tables.
 % The \label must come after \caption as always.
@@ -666,9 +666,9 @@ After testing with different coefficients we came up with the following rule for
 
 \section{Results}
 
-The first test was carried on the \emph{20 Newsgroups} dataset. The dataset consists of $20000$ news groups documents distributed across $20$ newsgroups almost evenly \cite{20 news groups}. Training was carried on with different parameters of $max\_depth$, once with the $csc\_matrix$ sparse matrix and once with dense matrix. As it can be seen in Figure~\ref{20 news groups}, the training time with dense inputs is much higher than the in their sparse counterparts. We verified that all $4$ fitted trees are identical. 
+The first test was carried on the \emph{20 Newsgroups} dataset. The dataset consists of $20000$ news groups documents distributed across $20$ newsgroups almost evenly \cite{joachims1996probabilistic}. Training was carried on with different parameters of $max\_depth$, once with the $csc\_matrix$ sparse matrix and once with dense matrix. As it can be seen in Figure~\ref{20 news groups}, the training time with dense inputs is much higher than the in their sparse counterparts. We verified that all $4$ fitted trees are identical.
 
-The second set of tests were carried on synthetic data. Random matrices were generated with different shapes and densities where a density is the percentage of non-zero values of a feature. For example a density of $0.1$ means that every feature is only $10\%$ of the time non-zero. Each matrix was represented both in a sparse and dense format. Decision trees were fitted once with the sparse and once in the dense format. Table~\ref{density} contains the training time of these matrices (the last two columns). As it can be seen in this table the training time of sparse matrices is much lower that their dense counterparts when the density of matrix is quite low, i.e. less $0.1$. For no-quite sparse matrices, e.g. $density = 0.5$, the training time with dense inputs is lower than their sparse counterparts. As this table suggests $csc\_matrix$ should only be used in sparse data, e.g. textual data. 
+The second set of tests were carried on synthetic data. Random matrices were generated with different shapes and densities where a density is the percentage of non-zero values of a feature. For example a density of $0.1$ means that every feature is only $10\%$ of the time non-zero. Each matrix was represented both in a sparse and dense format. Decision trees were fitted once with the sparse and once in the dense format. Table~\ref{density} contains the training time of these matrices (the last two columns). As it can be seen in this table the training time of sparse matrices is much lower that their dense counterparts when the density of matrix is quite low, i.e. less $0.1$. For no-quite sparse matrices, e.g. $density = 0.5$, the training time with dense inputs is lower than their sparse counterparts. As this table suggests $csc\_matrix$ should only be used in sparse data, e.g. textual data.
 
 \begin{figure}
 \centering
@@ -680,11 +680,11 @@ The second set of tests were carried on synthetic data. Random matrices were gen
 
 
 \begin{table}[h]
-\caption {Training Time in Seconds with Sparse and Dense Inputs} \label{density} 
+\caption {Training Time in Seconds with Sparse and Dense Inputs} \label{density}
 \begin{tabular}{|l|l|l||l|l|l|}
-  \hline                       
+  \hline
 Dataset Size	&	Feature Size	&	density	&	 Sparse Input	&	Dense Input	\\
-  \hline                       
+  \hline
 
 10000	&	1000	&	0.01	&	4.74	&	25.07	\\
 100000	&	100	&	0.01	&	7.26	&	24.65	\\
@@ -698,7 +698,7 @@ Dataset Size	&	Feature Size	&	density	&	 Sparse Input	&	Dense Input	\\
 10000	&	1000	&	0.5	&	28.97	&	14.02	\\
 100000	&	100	&	0.5	&	100.22	&	28.13	\\
 100000	&	1000	&	0.5	&	949.14	&	383.62 \\
- \hline                       
+ \hline
 \end{tabular}
 \end{table}
 
@@ -707,25 +707,6 @@ Dataset Size	&	Feature Size	&	density	&	 Sparse Input	&	Dense Input	\\
 
 \section{Conclusion}
 The conclusion goes here.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 % conference papers do not normally have an appendix
 
@@ -748,46 +729,8 @@ The authors would like to thank ...
 % The "triggered" command can be changed if desired:
 %\IEEEtriggercmd{\enlargethispage{-5in}}
 
-% references section
-
-% can use a bibliography generated by BibTeX as a .bbl file
-% BibTeX documentation can be easily obtained at:
-% http://www.ctan.org/tex-archive/biblio/bibtex/contrib/doc/
-% The IEEEtran BibTeX style support page is at:
-% http://www.michaelshell.org/tex/ieeetran/bibtex/
-%\bibliographystyle{IEEEtran}
-% argument is your BibTeX string definitions and bibliography database(s)
-%\bibliography{IEEEabrv,../bib/paper}
-%
-% <OR> manually copy in the resultant .bbl file
-% set second argument of \begin to the number of references
-% (used to reserve space for the reference number labels box)
-\begin{thebibliography}{1}
-
-\bibitem{forest}  
-Breiman, Leo (2001). ``Random Forests". Machine Learning 45 (1): 5--32. 
-
-\bibitem{information gain}  
-Deng,H.; Runger, G.; Tuv, E. (2011). ``Bias of importance measures for multi-valued attributes and solutions". Proceedings of the 21st International Conference on Artificial Neural Networks (ICANN2011). pp. 293--300.
-
-\bibitem{np-comlete}    
-Hyafil, Laurent; Rivest, RL (1976). ``Constructing Optimal Binary Decision Trees is NP-complete". Information Processing Letters 5 (1): 15--17.
-\bibitem{20 news groups}
-Ken Lang, ``Newsweeder: Learning to filter netnews", \emph{Proceedings of the Twelfth International Conference on Machine Learning} ,pp.  331--339.
-
-\bibitem{scikit-learn}
-Pedregosa, F. and Varoquaux, G. and Gramfort, A. and Michel, V. and Thirion, B. and Grisel, O. and Blondel, M. and Prettenhofer, P. and Weiss, R. and Dubourg, V. and Vanderplas, J. and Passos, A. and Cournapeau, D. and Brucher, M. and Perrot, M. and Duchesnay, E. ``Scikit-learn: Machine Learning in Python", JMLR 12, pp. 2825--2830, 2011. 
-
-\bibitem{tree}
-Rokach, Lior; Maimon, O. (2008). ``Data mining with decision trees: theory and applications". World Scientific Pub Co Inc
-
-\bibitem{adaboost}
-Yoav Freund and Robert E.Schapire, ``A decision-theoretic generalization of on-line learning and an application to boosting". Journal of Computer and System Sciences 55. 1997.
-
-
-
-
-\end{thebibliography}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
 
 
 

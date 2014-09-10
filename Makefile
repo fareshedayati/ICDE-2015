@@ -8,7 +8,7 @@ all: clean article
 
 article:
 	$(PDFLATEX) ICDE.tex
-	# $(BIBTEX) ICDE
+	$(BIBTEX) ICDE
 	$(PDFLATEX) ICDE.tex
 	$(PDFLATEX) ICDE.tex
 
