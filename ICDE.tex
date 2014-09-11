@@ -384,13 +384,13 @@
 
 \begin{abstract}
 
-Many machine learning tasks involve sparsely representable input space. State-
-of-the-art tree-based ensemble algorithms and implementation have focused on
-tasks with dense input space, while at most emulating random memory access on
-sparse input data. We propose a fast and an efficient splitting algorithm to
-leverage input sparsity within decision tree methods. We exploit the a-priori
-knowledge that each column have very few non-zero elements and show how
-learning time is significantly decreased.
+Many machine learning tasks such as text annotation involve sparsely
+representable input space. State-of-the-art tree-based ensemble algorithms and
+implementations have focused on tasks with dense input space, while at most
+emulating random memory access on sparse input data. We propose a fast and an
+efficient splitting algorithm to leverage input sparsity within decision tree
+methods. We exploit the a-priori knowledge that each column have very few non-
+zero elements and show how learning time is significantly decreased.
 
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
@@ -415,14 +415,15 @@ learning time is significantly decreased.
 \section{Introduction}
 % no \IEEEPARstart
 
-High dimensional supervised learning problems, e.g. in text processing or image
-exploitation, are more frequent than ever. While those datasets have very high
+High dimensional supervised learning problems, e.g. in text or image
+annotation, are more frequent than ever. It consists in searching a mapping
+between an input space $\mathcal{X}$, where each dimension is called a feature
+to some output space $\mathcal{Y}$. While those datasets have very high
 dimensional input space, they are often sparsely representable. For instance,
-the number of unique words associated to a text document is actually small
-compared to the total number of words of a given language. In order to work
-efficiently with sparsely representable data, efficient matrix formats have been
-developed such as compressed sparse column matrix format with fast matrix
-operations, such as dot product, and low memory footprints.
+the set of unique words associated to a text document is actually small
+compared to the words of a given language. In order to work efficiently with
+such data, efficient matrix formats have been developed with fast operations,
+such as dot product, and a low memory footprints.
 
 Tree-based ensemble models, such as adaboost \cite{freund1995desicion}, random
 forest \cite{breiman2001random} or gradient tree boosting
@@ -466,6 +467,8 @@ perspectives.
 
 \section{Background} \label{sec:background}
 \subsection{Induction of decision trees}
+
+
 Let $X$ be a matrix of dimension $n \times d$ where $d$ is the dimension of the
 feature space and $n$ is the number of training instances, i.e. each row
 corresponds to an instance and each column corresponds to a feature. Moreover
