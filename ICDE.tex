@@ -418,12 +418,13 @@ zero elements and show how learning time is significantly decreased.
 High dimensional supervised learning problems, e.g. in text or image
 annotation, are more frequent than ever. It consists in searching a mapping
 between an input space $\mathcal{X}$, where each dimension is called a feature
-to some output space $\mathcal{Y}$. While those datasets have very high
-dimensional input space, they are often sparsely representable. For instance,
-the set of unique words associated to a text document is actually small
-compared to the words of a given language. In order to work efficiently with
-such data, efficient matrix formats have been developed with fast operations,
-such as dot product, and a low memory footprints.
+to some output categorical or numerical variable $\mathcal{Y}$. While those
+datasets have very high dimensional input space, they are often sparsely
+representable. For instance, the number of unique words associated to a text
+document is actually small compared to the all words of a given language. In
+order to work efficiently with such data, efficient matrix formats have been
+developed with fast operations, such as dot product, and a low memory
+footprints.
 
 Tree-based ensemble models, such as adaboost \cite{freund1995desicion}, random
 forest \cite{breiman2001random} or gradient tree boosting
