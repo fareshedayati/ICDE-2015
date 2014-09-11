@@ -117,7 +117,9 @@
 
 
 %\usepackage{program}
+\newtheorem{algorithm}{Algorithm}
 \usepackage{algpseudocode}
+\usepackage{varwidth}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true}
@@ -382,13 +384,13 @@
 
 \begin{abstract}
 
-Many machine learning tasks involve sparsely representable input space. State-
-of-the-art tree-based ensemble algorithms and implementation have focused on
-tasks with dense input space, while at most emulating random memory access on
-sparse input data. We propose a fast and an efficient splitting algorithm to
-leverage input sparsity within decision tree methods. We exploit the a-priori
-knowledge that each column have very few non-zero elements and show how
-learning time is significantly decreased.
+Many machine learning tasks such as text annotation involve sparsely
+representable input space. State-of-the-art tree-based ensemble algorithms and
+implementations have focused on tasks with dense input space, while at most
+emulating random memory access on sparse input data. We propose a fast and an
+efficient splitting algorithm to leverage input sparsity within decision tree
+methods. We exploit the a-priori knowledge that each column have very few non-
+zero elements and show how learning time is significantly decreased.
 
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
@@ -413,14 +415,16 @@ learning time is significantly decreased.
 \section{Introduction}
 % no \IEEEPARstart
 
-High dimensional supervised learning problems, e.g. in text processing or image
-exploitation, are more frequent than ever. While those datasets have very high
-dimensional input space, they are often sparsely representable. For instance,
-the number of unique words associated to a text document is actually small
-compared to the total number of words of a given language. In order to work
-efficiently with sparsely representable data, efficient matrix formats have been
-developed such as compressed sparse column matrix format with fast matrix
-operations, such as dot product, with a low memory footprint.
+High dimensional supervised learning problems, e.g. in text or image
+annotation, are more frequent than ever. It consists in searching a mapping
+between an input space $\mathcal{X}$, where each dimension is called a feature
+to some output categorical or numerical variable $\mathcal{Y}$. While those
+datasets have very high dimensional input space, they are often sparsely
+representable. For instance, the number of unique words associated to a text
+document is actually small compared to the all words of a given language. In
+order to work efficiently with such data, efficient matrix formats have been
+developed with fast operations, such as dot product, and a low memory
+footprints.
 
 Tree-based ensemble models, such as adaboost \cite{freund1995desicion}, random
 forest \cite{breiman2001random} or gradient tree boosting
@@ -431,40 +435,43 @@ samples by recursively maximizing the reduction of an impurity measure, e.g.
 the output variance. At each node, the best split is selected among $k$
 randomly selected features. This recursive procedure is repeated until a
 stopping condition is met, e.g. a maximal depth is reached or there are too few
-samples to split. Leaves are labeled by the mean in regression or by the class
-frequencies in classification with reaching training samples. Predictions will
-be made by aggregating the the prediction of each tree of the ensemble.
+samples to split. Leaves are labeled by the outpu mean in regression or by the
+class frequencies in classification with reaching training samples. Predictions
+will be made by aggregating the prediction of each tree of the ensemble.
 
 Many models, such as linear or nearest neighbors model, could directly benefit
 from the input sparsity by formulating the entire algorithm through a set of
 dot products. Since this is not possible for tree based methods, most machine
 learning packages don't support sparse input for tree-based methods, are
-restricted to decision stump (decision tree with only one internal node) or
+restricted to decision stumps (decision tree with only one internal node) or
 have a sub-optimal implementation through the simulation of a random access
 memory as in the dense case. The only solution is often to densify the input
 space which leads first to severe memory constraints and then to slow
 training time.
 
 In this paper, we present an efficient splitting procedure tailored for
-numerical sparse input data in compressed sparse column format. For a given
-subset of samples, we are able to efficiently extract non zero values for a
-given feature of this subset of samples. Knowing which elements are non zeros
-allows large speed up. It decreases sorting time of samples in the current node along features which is an essential component in all tree-based models. Moreover it reduces the set of possible splits to evaluate at
-each node. We also want to highlight that the contribution of this paper have
-been proposed for inclusion to the  \emph{scikit-learn}
+numerical sparse input data in compressed sparse column format, a sparse matrix
+format. For a given subset of samples, we are able to efficiently extract non
+zero values for a given feature of this subset of samples. Knowing which
+elements are non zeros allows large speed up. It decreases sorting time of
+samples in the current node along features which is an essential component in
+all tree-based models. Moreover it reduces the set of possible splits to
+evaluate at each node. We also want to highlight that the contribution of this
+paper have been proposed for inclusion to the  \emph{scikit-learn}
 \cite{buitinck2013api,pedregosa2011scikit} open source package. This will
 benefit the machine learning community.
 
 The rest of this paper is organized as follows: Section \ref{sec:background}
-introduces decision tree splitting algorithm; Section \ref{sec:sparse-input-dt}
-describe the proposed splitting algorithm for sparse input data; Section
-\ref{sec:experiments} provides our empirical implementation study and Section
-\ref{sec:conclusion} concludes and describes further perspectives.
+introduces decision tree splitting algorithm and sparse matrix formats; Section
+\ref{sec:sparse-input-dt} describes the proposed splitting algorithm for sparse
+input data; Section \ref{sec:experiments} provides our empirical implementation
+study and Section \ref{sec:conclusion} concludes and describes further
+perspectives.
 
-\section{Background: decision tree} \label{sec:background}
+\section{Background} \label{sec:background}
+\subsection{Induction of decision trees}
 
-In this section we briefly go over training decision trees and in the next
-section we will show how to tweak this algorithm for support of sparse inputs.
+
 Let $X$ be a matrix of dimension $n \times d$ where $d$ is the dimension of the
 feature space and $n$ is the number of training instances, i.e. each row
 corresponds to an instance and each column corresponds to a feature. Moreover
@@ -496,70 +503,138 @@ These two numbers along with $samples$ specifies the indices of $X, Y$ that
 are in the current node: $samples[start:end]$. Note that we use this name to
 be consistent with \emph{scikit-learn} \cite{buitinck2013api,pedregosa2011scikit}.
 
-\begin{algorithmic}
-\Function{FIT}{$start =0, end = n, Node, depth$}
-\If {$|end - start| < min\_samples\_split$ or $depth > max\_depth$ }
-\State $Node.IsLeaf = True$
-\State $Node.Class = \,\,Most\,\, frequent\,\,$
-\State $\,\,\,\,\,class \,\,of\,\, Y[samples[start:end]]$
-\State \Return $Node$
-\EndIf
-\State $f, t = BestSplit(start, end)$\\
-\State \emph{Rearrange $samples[start:end]$}
-\State \emph{such that instances in $samples[start:end]$}
-\State \emph{with feature $f$ less than $t$ are before}
-\State \emph{those that are great than $t$.}
-\State \emph{Let $mid$ be an index in the rearranged samples}
-\State \emph{such that $X[samples[start:mid], f]$} are less than
-\State \emph{$X[samples[mid:end], f]$}\\
-
-\If {$|mid - start |$ or $|end - mid| <min\_samples\_leaf$}
-\State $Node.IsLeaf = True$
-\State $Node.Class = \,\,Most\,\, frequent\,\,$
-\State $\,\,\,\,\,class \,\,of\,\, Y[samples[start:end]]$
-\State \Return $Node$
-\EndIf
-\State $Node.Feature = f$
-\State $Node.Threshold = t$
-\State $Node.LeftNode = new \,\, Node()$
-\State $Node.RightNode = new \,\, Node()$
-\State FIT($start, mid, Node.LeftNode, depth+1$)
-\State FIT($mid, end, Node.RightNode, depth+1$)
-\State\Return $Node$
-\EndFunction
-\Function{BestSplit}{start, end}
-\State $BestThreshold = 0$
-\State $BestScore = -\infty$
-\State $BestFeature = 0$
-\For{$f \in \{1, \cdots, d\}$}
-\State $Sort(X, samples, f, start, end)$
-\For{$i \in [start+1:end] $}
-\State $t = X[samples[i], f]$
-\State $Y_L = Y[samples[start:i]]$
-\State $Y_R = Y[samples[i:end]]$.
-\State $H_L = \mbox{H}(Y_L)$
-\State $H_R = \mbox{H}(Y_R)$
-\State $S = H(Y) - \left(\frac{|i - start|}{|end - start|} H_L+\frac{|end - i|}{|end - start|}H_R\right)$
-\State Where $H(\,\cdot\,)$ is the entropy
-\State $T = t$
-\If {$S > bestScore$}
-\State $BestScore = S$
-\State $BestThreshold = T$
-\State $BestFeature = f$
-\EndIf
-\EndFor
-\EndFor \\
-\Return $BestFeature, BestThreshold$
-\EndFunction
-\Function{Sort}{$X, samples, f, start, end$ }
-\State \emph{Rearrange $samples[start:end]$}
-\State \emph{by sorting $X[samples[start:end], f]$,}
-\State \emph{keep $X$ and $Y$ unchanged.}\\
+\begin{algorithm}\label{algo:tree-induction}
+Build a decision tree
+\textnormal{
+\begin{algorithmic}[1]
+\Function{InduceDecisionTree}{$X$, $Y$}
+    \State Initialize a tree structure $\tau$ with root node $t_0$
+    \State Initialize an empty stack $stack$
+    \State Initialize a sample set $\mathcal{L}=\{0,\ldots,n-1\}$
+    \State $stack$\Call{.push}{($t_0$, $\mathcal{L}$)}
+    \While{$stack$ is not empty}
+        \State $t_p$, $\mathcal{L}_p$ = $stack$\Call{.pop}{}()
+        \If{$t_p$ satisfies stopping criterion}
+            \State Make $t_p$ a leaf node using $\mathcal{L}_p$ and $Y$.
+        \Else
+            \State \begin{varwidth}[t]{0.8\linewidth}
+                   Find a splitting rule $s^*$ which maximizes impurity reduction
+                   among possible splitting rules $Q(\mathcal{L}_p, X)$:
+                   \[
+                   s^* = \arg\max_{s \in Q(\mathcal{L}_p, X)} \Delta{}I(s,X,Y).
+                   \]
+                   \end{varwidth}
+            \State Make $t_p$ an internal node given splitting rule $s$.
+            \State Partition $\mathcal{L}_p$ into $\mathcal{L}_r$ and
+                   $\mathcal{L}_l$ given $s^*$.
+            \State Create two empty nodes $t_r$ and $t_l$ child of $t_p$.
+            \State $stack$\Call{.push}{($t_r$, $\mathcal{L}_r$)}
+            \State $stack$\Call{.push}{($t_l$, $\mathcal{L}_l$)}
+        \EndIf
+    \EndWhile
+    \State \Return $\tau$
 \EndFunction
 \end{algorithmic}
+}
+\end{algorithm}
 
-\section{Decision on sparse input data} \label{sec:sparse-input-dt}
+\begin{algorithm}\label{algo:find-best-split}
+Search for the best split
+\textnormal{
+\begin{algorithmic}[1]
+\Function{FindBestSplit}{$\mathcal{L}$,$X$, $Y$}
+    \State $\text{best} = -\infty$
+    \For{$j \in \{0, \ldots, p-1\}$}
+        \State Extract feature values reaching the node
+               \[
+               \mathcal{X}_j = \{X_{i,j}, \forall i \in \mathcal{L}\}
+               \]
+        \State Sort $\mathcal{L}$ and $\mathcal{X}_j$ by increasing values
+               of $\mathcal{X}_j$.
+        \State Generate all possible splitting rules
+               \[
+               Q(\mathcal{X}_j)=\{((x_j \leq \nu), (x_j > \nu))| \nu \in \mathcal{X}_j)
+               \]
+        \For{$s$ in $Q(\mathcal{X}_j)$}
+            \State Evaluate impurity reduction of splitting rule $s$
+                   \[
+                   \text{score} = \Delta{}I(s,X, Y).
+                   \]
+            \If{$\text{score} > \text{best}$}
+                \State $\text{best} =\text{score}$
+                \State $s^* = s$
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \Return $s^*$
+\EndFunction
+\end{algorithmic}
+}
+\end{algorithm}
 
+% \begin{algorithmic}
+% % \Function{FIT}{$start =0, end = n, Node, depth$}
+% % \If {$|end - start| < min\_samples\_split$ or $depth > max\_depth$ }
+% % \State $Node.IsLeaf = True$
+% % \State $Node.Class = \,\,Most\,\, frequent\,\,$
+% % \State $\,\,\,\,\,class \,\,of\,\, Y[samples[start:end]]$
+% % \State \Return $Node$
+% % \EndIf
+% % \State $f, t = BestSplit(start, end)$\\
+% % \State \emph{Rearrange $samples[start:end]$}
+% % \State \emph{such that instances in $samples[start:end]$}
+% % \State \emph{with feature $f$ less than $t$ are before}
+% % \State \emph{those that are great than $t$.}
+% % \State \emph{Let $mid$ be an index in the rearranged samples}
+% % \State \emph{such that $X[samples[start:mid], f]$} are less than
+% % \State \emph{$X[samples[mid:end], f]$}\\
+
+% % \If {$|mid - start |$ or $|end - mid| <min\_samples\_leaf$}
+% % \State $Node.IsLeaf = True$
+% % \State $Node.Class = \,\,Most\,\, frequent\,\,$
+% % \State $\,\,\,\,\,class \,\,of\,\, Y[samples[start:end]]$
+% % \State \Return $Node$
+% % \EndIf
+% % \State $Node.Feature = f$
+% % \State $Node.Threshold = t$
+% % \State $Node.LeftNode = new \,\, Node()$
+% % \State $Node.RightNode = new \,\, Node()$
+% % \State FIT($start, mid, Node.LeftNode, depth+1$)
+% % \State FIT($mid, end, Node.RightNode, depth+1$)
+% % \State\Return $Node$
+% % \EndFunction
+% \Function{BestSplit}{start, end}
+% \State $BestThreshold = 0$
+% \State $BestScore = -\infty$
+% \State $BestFeature = 0$
+% \For{$f \in \{1, \cdots, d\}$}
+% \State $Sort(X, samples, f, start, end)$
+% \For{$i \in [start+1:end] $}
+% \State $t = X[samples[i], f]$
+% \State $Y_L = Y[samples[start:i]]$
+% \State $Y_R = Y[samples[i:end]]$.
+% \State $H_L = \mbox{H}(Y_L)$
+% \State $H_R = \mbox{H}(Y_R)$
+% \State $S = H(Y) - \left(\frac{|i - start|}{|end - start|} H_L+\frac{|end - i|}{|end - start|}H_R\right)$
+% \State Where $H(\,\cdot\,)$ is the entropy
+% \State $T = t$
+% \If {$S > bestScore$}
+% \State $BestScore = S$
+% \State $BestThreshold = T$
+% \State $BestFeature = f$
+% \EndIf
+% \EndFor
+% \EndFor \\
+% \Return $BestFeature, BestThreshold$
+% \EndFunction
+% \Function{Sort}{$X, samples, f, start, end$ }
+% \State \emph{Rearrange $samples[start:end]$}
+% \State \emph{by sorting $X[samples[start:end], f]$,}
+% \State \emph{keep $X$ and $Y$ unchanged.}\\
+% \EndFunction
+% \end{algorithmic}
+
+\subsection{Sparse matrix format}
 
 For memory efficiency and taking advantage of sparsity we use a data structure
 called \emph{scipy.sparse.csc\_matrix}. This data structure has a common use in
@@ -587,6 +662,7 @@ $\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,}[1, 0, 4$\\
 $\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,} 0, 0, 5$\\
 $\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,}2, 3, 6]$\\
 
+\section{Decision on sparse input data} \label{sec:sparse-input-dt}
 
 The only part of the $BestFit$ algorithm of the previous section that changes
 is the way we sort the training matrix along a feature. For a given feature $f$
@@ -611,14 +687,14 @@ instead. In reverse index search for each instance $index$ in $indices[indptr[f]
 $index\_to\_samples[index]$ is not between $start$ and $end$ then that instance
 is not in the current node. So we only keep instances in
 $indices[indptr[f]:indptr[f+1]]$ when their corresponding $index\_to\_samples$
-is between $start$ and $end$. 
+is between $start$ and $end$.
 
 We define the following four variables for the current feature $f$:
 \begin{equation}
 n\_indices_f = indptr[f+1] - indptr[f]
 \end{equation}
 \begin{equation}
-n\_samples = end - start, 
+n\_samples = end - start,
 \end{equation}
 
 \begin{equation}
@@ -637,33 +713,33 @@ $indices[indptr[f]:indptr[f+1]]$ takes $B_f$ (equation~\ref{B}).
 
 Note that sorting of $samples[start:end]$ happens only once in a $BestSplit$ call for all
 candidate features, whereas the binary search happens for each candidate feature.
-On the other hand, the reverse index search takes $n\_indices_f$ time. Hence the total time of binary search is: 
+On the other hand, the reverse index search takes $n\_indices_f$ time. Hence the total time of binary search is:
 $$S + \sum_{f} B_f, $$
-and the total time for the reverse index search is: 
-$$\sum_{f} n\_indices_f.$$ 
+and the total time for the reverse index search is:
+$$\sum_{f} n\_indices_f.$$
 
-Instead of comparing these two numbers and making a decision, we make a decision on each feature $f$. 
-We compare the time complexity of the binary search, i.e. $B_f$, to that of a fraction of the reverse index search, i.e. to $c \times n\_indices$. 
+Instead of comparing these two numbers and making a decision, we make a decision on each feature $f$.
+We compare the time complexity of the binary search, i.e. $B_f$, to that of a fraction of the reverse index search, i.e. to $c \times n\_indices$.
 Benchmarking with different values of $c$, we came up with the following heuristic: \\
 
 \begin{algorithmic}
 \If{$samples[start:end]$ is sorted}
 	\If{$ B_f < 0.10 \times n\_indices_f $}
 	\State Carry on the binary search
-	\Else 
-	\State  Carry on the reverse index search 
+	\Else
+	\State  Carry on the reverse index search
 	\EndIf
 \Else
 	\If{$ S + B_f < 0.10 \times n\_indices_f $}
-	\State Sort $samples[start:end]$. 
+	\State Sort $samples[start:end]$.
 	\State Carry on the binary search
-	\Else 
-	\State  Carry on the reverse index search 
+	\Else
+	\State  Carry on the reverse index search
 	\EndIf
 \EndIf
 \end{algorithmic}
 
-Finally note that for testing the sparse data is flattened for efficient random memory access.   
+Finally note that for testing the sparse data is flattened for efficient random memory access.
 
 \section{Experiments} \label{sec:experiments}
 
