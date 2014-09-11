@@ -441,7 +441,7 @@ Many models, such as linear or nearest neighbors model, could directly benefit
 from the input sparsity by formulating the entire algorithm through a set of
 dot products. Since this is not possible for tree based methods, most machine
 learning packages don't support sparse input for tree-based methods, are
-restricted to decision stump (decision tree with only one internal node) or
+restricted to decision stumps (decision tree with only one internal node) or
 have a sub-optimal implementation through the simulation of a random access
 memory as in the dense case. The only solution is often to densify the input
 space which leads first to severe memory constraints and then to slow
@@ -458,8 +458,8 @@ been proposed for inclusion to the  \emph{scikit-learn}
 benefit the machine learning community.
 
 The rest of this paper is organized as follows: Section \ref{sec:background}
-introduces decision tree splitting algorithm and sparse matrix format; Section
-\ref{sec:sparse-input-dt} describe the proposed splitting algorithm for sparse
+introduces decision tree splitting algorithm and sparse matrix formats; Section
+\ref{sec:sparse-input-dt} describes the proposed splitting algorithm for sparse
 input data; Section \ref{sec:experiments} provides our empirical implementation
 study and Section \ref{sec:conclusion} concludes and describes further
 perspectives.
