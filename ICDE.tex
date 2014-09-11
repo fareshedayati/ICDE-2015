@@ -497,7 +497,7 @@ In the context of ensemble, tree are further randomized by searching for the
 best split among $k$ features at each node and also might be induced on a
 bootstrap copy of the samples. The tree can be grown alternatively in a best-first
 search manner by replacing the stack of Algorithm~\ref{algo:tree-induction}
-by a priority queue with impurity reduction as priority.
+by a priority queue where priority is defined by expected impurity reduction.
 
 
 \begin{algorithm}\label{algo:tree-induction}
