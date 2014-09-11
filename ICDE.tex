@@ -634,30 +634,31 @@ Search for the best split
 \subsection{Sparse matrix format}
 
 For memory efficiency and taking advantage of sparsity we use a data structure
-called \emph{scipy.sparse.csc\_matrix}. This data structure has a common use in
-\emph{scikit-learn}. It consists of four parts: \emph{indices}, \emph{indptr},
-\emph{data} and $shape$ which contains the dimensions of the matrix. The
-indices for column $f$ are stored in:
+called compressed sparse column (csc) matrix format. It is general format to
+represent compactly sparse matrices using three arrays: a $data$ array stores
+the value of each non zero elements, an $indices$ array stores the row index
+of each non zero elements and an $indptr$ array which stores the beginning of
+each columns in the $data$ and the $indices$ arrays.
 
-\begin{equation}
-indices[indptr[f]:indptr[f+1]],
-\end{equation}
-with the corresponding values at
-\begin{equation}
-data[indptr[f]:indptr[f+1]].
-\end{equation}
-
-For example if the $indptr$, $indices$, and $data$ of a $(3 \times 3)$ $csc\_matrix$ be the following:
+For instance, the matrix $3 \times 5$ matrix
+\[
+\begin{bmatrix}
+1 & 0 & 0 & 4 & 0 \\
+0 & 0 & 0 & 5 & 0 \\
+0 & 0 & 0 & 0 & 0
+\end{bmatrix}
+\]
+is compactly represented by a csc matrix with the following arrays
 \begin{align*}
-indptr &= [0,2,3,6]\\
-indices &= [0,2,2,0,1,2]\\
-data &= [1,2,3,4,5,6]
+inptr &= \begin{bmatrix}0 & 1 & 1 & 1 & 3 & 3\end{bmatrix}, \\
+indices &= \begin{bmatrix}0 & 0 & 1\end{bmatrix}, \\
+data &= \begin{bmatrix}1 & 4 & 5\end{bmatrix}.
 \end{align*}
 
-Then the (dense) matrix itself should be:\\\\
-$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,}[1, 0, 4$\\
-$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,} 0, 0, 5$\\
-$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,}2, 3, 6]$\\
+The main advantages of csc matrix is to allow fast column slicing, efficient
+arithmetic and matrix operations. However, row slicing is slower. A similar
+row-based sparse matrix called compressed sparse row format also exists and
+works under similar principles.
 
 \section{Decision on sparse input data} \label{sec:sparse-input-dt}
 
