@@ -6,24 +6,30 @@ import pandas as pd
 import prettyplotlib as ppl
 import matplotlib.pyplot as plt
 
-x = np.array([1, 2, 10])
+from prettyplotlib.colors import set2
 
+x = np.array([1, 2, 10, "unrestricted"])
+
+ind = np.arange(len(x))
+width = 0.35       # the width of the bars
 
 measures = {
-    "sparse": np.array([2.6, 5.3, 21.1]),
-    "dense": np.array([76.8, 134.1, 472.174]),
-    "sparse unrestricted depth": 68.89 * np.ones_like(x),
-    "dense unrestricted depth": 974.68 * np.ones_like(x),
+    "sparse": np.array([2.6, 5.3, 21.1, 68.89]),
+    "dense": np.array([76.8, 134.1, 472.174, 974.68]),
 }
 
 
-plt.figure()
-for label in measures:
-    if "unrestricted" in label:
-        ppl.plot(x, measures[label], label=label)
-    else:
-        ppl.plot(x, measures[label], "-o", label=label)
+fig, ax = plt.subplots(1)
+plt.bar(ind, measures["sparse"], width, color=set2[0], label="sparse")
+plt.bar(ind + width, measures["dense"], width, color=set2[1], label="dense")
 
+# for label in measures:
+#     if "unrestricted" in label:
+#         ppl.plot(x, measures[label], label=label)
+#     else:
+#         ppl.plot(x, measures[label], "-o", label=label)
+
+#     ppl.bar(mean_chrono.index, mean_chrono[label], yerr=std_chrono, label=label)
 
 
 ax = plt.gca()
@@ -39,8 +45,8 @@ for loc, spine in ax.spines.items():
     else:
         raise ValueError('unknown spine location: %s'%loc)
 
-ax.set_xlim(0, np.max(x)+1)
-
+ax.set_xticks(ind+width)
+ax.set_xticklabels(x)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 
