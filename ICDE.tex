@@ -539,7 +539,7 @@ Build a decision tree
 Search for the best split
 \textnormal{
 \begin{algorithmic}[1]
-\Function{FindBestSplit}{$\mathcal{L}$,$X$, $Y$}
+\Function{FindBestSplit}{$\mathcal{L}$, $X$, $Y$}
     \State $\text{best} = -\infty$
     \For{$j \in \{0, \ldots, p-1\}$}
         \State Extract feature values reaching the node
@@ -555,7 +555,7 @@ Search for the best split
         \For{$s$ in $Q(\mathcal{X}_j)$}
             \State Evaluate impurity reduction of splitting rule $s$
                    \[
-                   \text{score} = \Delta{}I(s, \mathcal{L}_p).
+                   \text{score} = \Delta{}I(s, \mathcal{L}).
                    \]
             \If{$\text{score} > \text{best}$}
                 \State $\text{best} =\text{score}$
