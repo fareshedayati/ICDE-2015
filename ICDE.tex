@@ -325,7 +325,7 @@
 
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Leveraging input space sparsity to scale random forest}
+\title{Leveraging Input Space Sparsity\\ to Scale Tree-Based Models}
 
 % author names and affiliations
 % use a multiple column layout for up to three different
@@ -418,7 +418,7 @@ exploitation, are more frequent than ever. While those datasets have very high
 dimensional input space, they are often sparsely representable. For instance,
 the number of unique words associated to a text document is actually small
 compared to the total number of words of a given language. In order to work
-efficiently sparsely representable data, efficient matrix formats have been
+efficiently with sparsely representable data, efficient matrix formats have been
 developed such as compressed sparse column matrix format with fast matrix
 operations, such as dot product, with a low memory footprint.
 
@@ -438,10 +438,10 @@ be made by aggregating the the prediction of each tree of the ensemble.
 Many models, such as linear or nearest neighbors model, could directly benefit
 from the input sparsity by formulating the entire algorithm through a set of
 dot products. Since this is not possible for tree based methods, most machine
-learning package don't support sparse input for tree-based methods, are
+learning packages don't support sparse input for tree-based methods, are
 restricted to decision stump (decision tree with only one internal node) or
 have a sub-optimal implementation through the simulation of a random access
-memory as in the dense case. The only solution is often to densified the input
+memory as in the dense case. The only solution is often to densify the input
 space which leads first to severe memory constraints and then to slow
 training time.
 
@@ -449,11 +449,11 @@ In this paper, we present an efficient splitting procedure tailored for
 numerical sparse input data in compressed sparse column format. For a given
 subset of samples, we are able to efficiently extract non zero values for a
 given feature of this subset of samples. Knowing which elements are non zeros
-allows large speed up. It reduces the set of possible split to evaluate at
+allows large speed up. It decreases sorting time of samples in the current node along features which is an essential component in all tree-based models. Moreover it reduces the set of possible splits to evaluate at
 each node. We also want to highlight that the contribution of this paper have
 been proposed for inclusion to the  \emph{scikit-learn}
 \cite{buitinck2013api,pedregosa2011scikit} open source package. This will
-benefit to the machine learning community.
+benefit the machine learning community.
 
 The rest of this paper is organized as follows: Section \ref{sec:background}
 introduces decision tree splitting algorithm; Section \ref{sec:sparse-input-dt}
@@ -485,7 +485,7 @@ Since our tweak is independent of these parameters we only cover training
 decision trees for classification in a depth-first search manner with
 information gain. Our change works well with all tree variations. For more
 details refer to the latest merge in \emph{scikit-learn} in the tree and
-random-forests sections \cite{scikit-learn}.
+random-forests sections \cite{buitinck2013api,pedregosa2011scikit}.
 
 To avoid rearranging the whole matrix at the time of sorting, we use an
 auxiliary data structure \emph{samples} to rearrange the indices of the
@@ -494,7 +494,7 @@ $samples[i] = i$ for $i \in \{0,1,\cdots, n-1\}$, where $n$ is the number of
 training instances. Each node is specified by two numbers $start$ and $end$.
 These two numbers along with $samples$ specifies the indices of $X, Y$ that
 are in the current node: $samples[start:end]$. Note that we use this name to
-be consistent with \emph{scikit-learn} \cite{scikit-learn}.
+be consistent with \emph{scikit-learn} \cite{buitinck2013api,pedregosa2011scikit}.
 
 \begin{algorithmic}
 \Function{FIT}{$start =0, end = n, Node, depth$}
@@ -582,10 +582,10 @@ indices &= [0,2,2,0,1,2]\\
 data &= [1,2,3,4,5,6]
 \end{align*}
 
-Then the (dense) matrix itself should be:
-$[1, 0, 4$\\
-$\,\, 0, 0, 5$\\
-$\,\,2, 3, 6]$\\
+Then the (dense) matrix itself should be:\\\\
+$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,}[1, 0, 4$\\
+$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,} 0, 0, 5$\\
+$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,}2, 3, 6]$\\
 
 
 The only part of the $BestFit$ algorithm of the previous section that changes
@@ -594,52 +594,76 @@ we first find all instances in $samples[start:end]$ where feature $f$ is non-
 zero. We, then sort the positive and negative parts separately and rearrange
 $samples[start:end]$ accordingly.
 
-The challenge in finding instances in $samples[start:end]$ with non-zero values
+The real challenge in finding instances in $samples[start:end]$ with non-zero values
 of $f$ is that of finding the intersection of $indices[indptr[f]:indptr[f+1]]$
 and $samples[start:end]$. Depending on the size of these two sets we can either
-perform a binary search or an exhaustive search. For the latter end we need an
-additional auxiliary data structure that we call $index\_to\_samples$ which is
+perform a binary search or a \emph{reverse index} search. For the latter end we need an
+additional auxiliary data structure: $index\_to\_samples$ which basically is
 a reverse map of $samples$ to its indices, i.e. $index\_to\_samples[j] = i$
 when $samples[i] = j$.
 
 If the size of the current node, i.e. $end - start$, is small then we can sort
-$samples[start:end]$ and for each instance in $samples[start:end]$ do a binary
-search in $indices[indptr[f]:indptr[f+1]]$, this way we can find the
-intersection of two sets which is the set of instance of the current node with
+$samples[start:end]$ and for each \emph{index} in $samples[start:end]$ perform a binary
+search in $indices[indptr[f]:indptr[f+1]]$ to find the set of instances of the current node with
 non-zero values of feature $f$. On the other hand if the size of the current
-node is large, sorting the set might be costly and we do an exhaustive search
-instead. Note that we always keep $index\_to\_samples$ up-to-date. For each
-instance $index$ in $indices[indptr[f]:indptr[f+1]]$ if
+node is large, sorting the set might be costly; we do a reverse index search
+instead. In reverse index search for each instance $index$ in $indices[indptr[f]:indptr[f+1]]$ if
 $index\_to\_samples[index]$ is not between $start$ and $end$ then that instance
 is not in the current node. So we only keep instances in
 $indices[indptr[f]:indptr[f+1]]$ when their corresponding $index\_to\_samples$
-is between $start$ and $end$.
+is between $start$ and $end$. 
 
-We define the following two variables for the current feature $f$
+We define the following four variables for the current feature $f$:
 \begin{equation}
-n\_indices = indptr[f+1] - indptr[f]
+n\_indices_f = indptr[f+1] - indptr[f]
 \end{equation}
 \begin{equation}
-n\_samples = end - start.
+n\_samples = end - start, 
 \end{equation}
 
-Sorting of $samples[start:end]$ takes $O(n\_samples \times \log(n\_samples))$
+\begin{equation}
+\label{S}
+S = n\_samples  \times \log(n\_samples)
+\end{equation}
+
+\begin{equation}
+\label{B}
+B_f = n\_samples  \times \log(n\_indices_f)
+\end{equation}
+
+Sorting of $samples[start:end]$ takes time $S$ (equation~\ref{S})
 and binary search of instances of $samples[start:end]$ in
-$indices[indptr[f]:indptr[f+1]]$ takes $O(n\_samples \times \log(n\_indices))$.
-Sorting of $samples[start:end]$ happens only once in a $BestSplit$ call for all
-candidate features, and the binary search happens for each candidate feature.
-On the other hand, the exhaustive search takes $O(n\_indices)$ time. We let $C$
-be: $$ n\_samples  \times \log(n\_samples) + n\_samples \times \log(n\_indices)
-$$ After testing with different coefficients we came up with the following rule
-for the candidate feature $f$:
+$indices[indptr[f]:indptr[f+1]]$ takes $B_f$ (equation~\ref{B}).
+
+Note that sorting of $samples[start:end]$ happens only once in a $BestSplit$ call for all
+candidate features, whereas the binary search happens for each candidate feature.
+On the other hand, the reverse index search takes $n\_indices_f$ time. Hence the total time of binary search is: 
+$$S + \sum_{f} B_f, $$
+and the total time for the reverse index search is: 
+$$\sum_{f} n\_indices_f.$$ 
+
+Instead of comparing these two numbers and making a decision, we make a decision on each feature $f$. 
+We compare the time complexity of the binary search, i.e. $B_f$, to that of a fraction of the reverse index search, i.e. to $c \times n\_indices$. 
+Benchmarking with different values of $c$, we came up with the following heuristic: \\
 
 \begin{algorithmic}
-\If{$C  < 0.1 \times n\_indices \,\, $}
-\State \emph{ First sort $samples[start:end]$ if it is not already sorted, then for each instance in $samples[start:end]$ carry on a binary search in $indices[indptr[f]:indptr[f+1]]$}
+\If{$samples[start:end]$ is sorted}
+	\If{$ B_f < 0.10 \times n\_indices_f $}
+	\State Carry on the binary search
+	\Else 
+	\State  Carry on the reverse index search 
+	\EndIf
 \Else
-\State \emph{For each index in $indices[indptr[f]:indptr[f+1]]$ check if its in $samples[start:end]$ by verifying that its $index\_to\_samples$ is between $start$ and $end$.}
+	\If{$ S + B_f < 0.10 \times n\_indices_f $}
+	\State Sort $samples[start:end]$. 
+	\State Carry on the binary search
+	\Else 
+	\State  Carry on the reverse index search 
+	\EndIf
 \EndIf
 \end{algorithmic}
+
+Finally note that for testing the sparse data is flattened for efficient random memory access.   
 
 \section{Experiments} \label{sec:experiments}
 
