@@ -465,9 +465,7 @@ study and Section \ref{sec:conclusion} concludes and describes further
 perspectives.
 
 \section{Background} \label{sec:background}
-\subsection{Decision tree}
-In this section we briefly go over training decision trees and in the next
-section we will show how to tweak this algorithm for support of sparse inputs.
+\subsection{Induction of decision trees}
 Let $X$ be a matrix of dimension $n \times d$ where $d$ is the dimension of the
 feature space and $n$ is the number of training instances, i.e. each row
 corresponds to an instance and each column corresponds to a feature. Moreover
@@ -500,27 +498,27 @@ are in the current node: $samples[start:end]$. Note that we use this name to
 be consistent with \emph{scikit-learn} \cite{buitinck2013api,pedregosa2011scikit}.
 
 \begin{algorithm}\label{algo:tree-induction}
-Induce a decision tree
+Build a decision tree
 \textnormal{
 \begin{algorithmic}[1]
 \Function{InduceDecisionTree}{$X$, $Y$}
-    \State Initialize tree structure $\tau$ with root node $t_0$
+    \State Initialize a tree structure $\tau$ with root node $t_0$
     \State Initialize an empty stack $stack$
-    \State Initialize a sample set $\mathcal{L}=\{1,\ldots,n\}$
+    \State Initialize a sample set $\mathcal{L}=\{0,\ldots,n-1\}$
     \State $stack$\Call{.push}{($t_0$, $\mathcal{L}$)}
     \While{$stack$ is not empty}
         \State $t_p$, $\mathcal{L}_p$ = $stack$\Call{.pop}{}()
         \If{$t_p$ satisfies stopping criterion}
-            \State Make $t_p$ a leaf node using $\mathcal{L}_p$.
+            \State Make $t_p$ a leaf node using $\mathcal{L}_p$ and $Y$.
         \Else
             \State \begin{varwidth}[t]{0.8\linewidth}
-                   Find a split $s^*$ which maximize impurity reduction
+                   Find a splitting rule $s^*$ which maximizes impurity reduction
                    among possible splitting rules $Q(\mathcal{L}_p, X)$:
                    \[
                    s^* = \arg\max_{s \in Q(\mathcal{L}_p, X)} \Delta{}I(s,X,Y).
                    \]
                    \end{varwidth}
-            \State Make $t_p$ an internal node given split $s$.
+            \State Make $t_p$ an internal node given splitting rule $s$.
             \State Partition $\mathcal{L}_p$ into $\mathcal{L}_r$ and
                    $\mathcal{L}_l$ given $s^*$.
             \State Create two empty nodes $t_r$ and $t_l$ child of $t_p$.
@@ -535,19 +533,19 @@ Induce a decision tree
 \end{algorithm}
 
 \begin{algorithm}\label{algo:find-best-split}
-Search the best split
+Search for the best split
 \textnormal{
 \begin{algorithmic}[1]
 \Function{FindBestSplit}{$\mathcal{L}$,$X$, $Y$}
     \State $\text{best} = -\infty$
-    \For{$j \in \{1, \ldots, p\}$}
+    \For{$j \in \{0, \ldots, p-1\}$}
         \State Extract feature values reaching the node
                \[
                \mathcal{X}_j = \{X_{i,j}, \forall i \in \mathcal{L}\}
                \]
         \State Sort $\mathcal{L}$ and $\mathcal{X}_j$ by increasing values
                of $\mathcal{X}_j$.
-        \State Generate possible splitting rules
+        \State Generate all possible splitting rules
                \[
                Q(\mathcal{X}_j)=\{((x_j \leq \nu), (x_j > \nu))| \nu \in \mathcal{X}_j)
                \]
@@ -557,7 +555,7 @@ Search the best split
                    \text{score} = \Delta{}I(s,X, Y).
                    \]
             \If{$\text{score} > \text{best}$}
-                \State $\text{score} =\text{best}$
+                \State $\text{best} =\text{score}$
                 \State $s^* = s$
             \EndIf
         \EndFor
