@@ -433,9 +433,9 @@ samples by recursively maximizing the reduction of an impurity measure, e.g.
 the output variance. At each node, the best split is selected among $k$
 randomly selected features. This recursive procedure is repeated until a
 stopping condition is met, e.g. a maximal depth is reached or there are too few
-samples to split. Leaves are labeled by the mean in regression or by the class
-frequencies in classification with reaching training samples. Predictions will
-be made by aggregating the the prediction of each tree of the ensemble.
+samples to split. Leaves are labeled by the outpu mean in regression or by the
+class frequencies in classification with reaching training samples. Predictions
+will be made by aggregating the prediction of each tree of the ensemble.
 
 Many models, such as linear or nearest neighbors model, could directly benefit
 from the input sparsity by formulating the entire algorithm through a set of
