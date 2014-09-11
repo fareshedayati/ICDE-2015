@@ -648,7 +648,7 @@ For instance, the matrix $3 \times 5$ matrix
 0 & 0 & 0 & 0 & 0
 \end{bmatrix}
 \]
-is compactly represented by a csc matrix with the following arrays
+is represented by the following csc matrix with arrays
 \begin{align*}
 inptr &= \begin{bmatrix}0 & 1 & 1 & 1 & 3 & 3\end{bmatrix}, \\
 indices &= \begin{bmatrix}0 & 0 & 1\end{bmatrix}, \\
@@ -656,7 +656,7 @@ data &= \begin{bmatrix}1 & 4 & 5\end{bmatrix}.
 \end{align*}
 
 The main advantages of csc matrix is to allow fast column slicing, efficient
-arithmetic and matrix operations. However, row slicing is slower. A similar
+arithmetic and matrix operations. However, row slicing is slow. A similar
 row-based sparse matrix called compressed sparse row format also exists and
 works under similar principles.
 
