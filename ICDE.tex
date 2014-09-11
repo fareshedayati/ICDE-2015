@@ -417,31 +417,29 @@ zero elements and show how learning time is significantly decreased.
 
 High dimensional supervised learning problems, e.g. in text or image
 annotation, are more frequent than ever. It consists in searching a mapping
-between an input space $\mathcal{X}$, where each dimension is called a feature
-to some output categorical or numerical variable $\mathcal{Y}$. While those
-datasets have very high dimensional input space, they are often sparsely
-representable. For instance, the number of unique words associated to a text
-document is actually small compared to the all words of a given language. In
-order to work efficiently with such data, efficient matrix formats have been
-developed with fast operations, such as dot product, and a low memory
-footprints.
+between an input space, where each dimension is called a feature
+to some  categorical or numerical output variable. A sample is a
+input-output pair. While those datasets have very high dimensional input space,
+they are often sparsely representable. For instance, the number of unique words
+associated to a text document is actually small compared to the all words of a
+given language. In order to work efficiently with such data, efficient matrix
+formats have been developed with fast operations, such as dot product, and a
+low memory footprints.
 
 Tree-based ensemble models, such as adaboost \cite{freund1995desicion}, random
 forest \cite{breiman2001random} or gradient tree boosting
 \cite{friedman2001greedy}, are some of the most robust and widely-used
-supervised machine learning. Randomized decision trees
-\cite{breiman1984classification} are built on all or a bootstrap copy of the
-samples by recursively maximizing the reduction of an impurity measure, e.g.
-the output variance. At each node, the best split is selected among $k$
-randomly selected features. This recursive procedure is repeated until a
-stopping condition is met, e.g. a maximal depth is reached or there are too few
-samples to split. Leaves are labeled by the outpu mean in regression or by the
-class frequencies in classification with reaching training samples. Predictions
-will be made by aggregating the prediction of each tree of the ensemble.
+supervised machine learning. All these methods have in common that they use
+randomized decision trees as a base learner. This building block is a
+hierarchical model which divide the input space through a serie of binary
+splitting rules which partition the input space . Predictions of a decision tree is obtained by
+following the tree structure until reaching a leaf. In the ensemble framework, those models are either averaged
+\cite{breiman2001random} or learnt sequentially \cite{freund1995desicion},
+\cite{friedman2001greedy}.
 
 Many models, such as linear or nearest neighbors model, could directly benefit
 from the input sparsity by formulating the entire algorithm through a set of
-dot products. Since this is not possible for tree based methods, most machine
+dot products. However this is not possible for tree based methods, most machine
 learning packages don't support sparse input for tree-based methods, are
 restricted to decision stumps (decision tree with only one internal node) or
 have a sub-optimal implementation through the simulation of a random access
@@ -471,37 +469,36 @@ perspectives.
 \section{Background} \label{sec:background}
 \subsection{Induction of decision trees}
 
+We denote by $\mathcal{X}$ an input space and by $\mathcal{Y}$ the output space.
+Without loss of generality, we suppose that $\mathcal{X} = \mathcal{R}^p$ where
+$p$ denotes the number of features. Learning samples are represented by a pair of matrix
+$(X, y) \subseteq (\mathcal{X}, \mathcal{Y})_{i=0}^{n-1}$, where each row
+corresponds to a sample and each column to a feature or an output variable.
 
-Let $X$ be a matrix of dimension $n \times d$ where $d$ is the dimension of the
-feature space and $n$ is the number of training instances, i.e. each row
-corresponds to an instance and each column corresponds to a feature. Moreover
-we let $Y$ be a vector of size $n$ that contains the target variables, e.g. the
-target variable of instance $i$ is at $Y[i]$. Note that the in the function
-\emph{FIT} below, $min\_samples\_split$, $min\_samples\_leaf$ and $max\_depth$
-are regularization parameters for prevention of overfitting.
-$min\_samples\_split$ is the minimum number of training instances required in a
-node before a split is carried on the node, $min\_samples\_leaf$ is the minimum
-number of instances required in the node and $max\_depth$ is the maximum depth
-of the tree. As soon as there are too few instances in the current node or the
-best split of the current node leave at least one of the children with too few
-instances or the tree becomes too deep no further splitting is carried out and
-the current node becomes a leaf node. The tree can be grown alternatively in a
-best-first search manner in which case $max\_leaf\_nodes$ is needed as well.
-$max\_features$, $splitter$ and $criterion$ are other parameters of the model.
-Since our tweak is independent of these parameters we only cover training
-decision trees for classification in a depth-first search manner with
-information gain. Our change works well with all tree variations. For more
-details refer to the latest merge in \emph{scikit-learn} in the tree and
-random-forests sections \cite{buitinck2013api,pedregosa2011scikit}.
+A decision trees \cite{breiman1984classification} is built  by recursively
+maximizing the average reduction of an impurity measure, such as the variance,
+\[
+\Delta{}I(s, \mathcal{L}) =
+I((Y_i)_{i \in \mathcal{L}}) -
+\frac{|\mathcal{L}_r|}{|\mathcal{L}|} I((Y_i)_{i \in \mathcal{L}_l}) -
+\frac{|\mathcal{L}_l|}{|\mathcal{L}|} I((Y_i)_{i \in \mathcal{L}_r}))
+\]
+where $s$ is a binary partition of the input space which divide the sample set
+$\mathcal{L}$ into $ \mathcal{L}_l$ and $ \mathcal{L}_r$. This recursive
+procedure is repeated until a stopping condition is met, e.g. a maximal depth
+is reached or there are too few samples to split. Those stopping criteria act
+as regularization parameters. Leaves are labeled by the output mean in
+regression or by the class frequencies in classification with reaching training
+samples. The recursive induction of the decision decision is described
+by Algorithm~\ref{algo:tree-induction} and the search for the best split
+is described by  Algorithm~\ref{algo:find-best-split}.
 
-To avoid rearranging the whole matrix at the time of sorting, we use an
-auxiliary data structure \emph{samples} to rearrange the indices of the
-training dataset only, keeping $X$ and $Y$ unchanged. Initially
-$samples[i] = i$ for $i \in \{0,1,\cdots, n-1\}$, where $n$ is the number of
-training instances. Each node is specified by two numbers $start$ and $end$.
-These two numbers along with $samples$ specifies the indices of $X, Y$ that
-are in the current node: $samples[start:end]$. Note that we use this name to
-be consistent with \emph{scikit-learn} \cite{buitinck2013api,pedregosa2011scikit}.
+In the context of ensemble, tree are further randomized by searching for the
+best split among $k$ features at each node and also might be induced on a
+bootstrap copy of the samples. The tree can be grown alternatively in a best-first
+search manner by replacing the stack of Algorithm~\ref{algo:tree-induction}
+by a priority queue where priority is defined by expected impurity reduction.
+
 
 \begin{algorithm}\label{algo:tree-induction}
 Build a decision tree
@@ -521,7 +518,7 @@ Build a decision tree
                    Find a splitting rule $s^*$ which maximizes impurity reduction
                    among possible splitting rules $Q(\mathcal{L}_p, X)$:
                    \[
-                   s^* = \arg\max_{s \in Q(\mathcal{L}_p, X)} \Delta{}I(s,X,Y).
+                   s^* = \arg\max_{s \in Q(\mathcal{L}_p, X)} \Delta{}I(s, \mathcal{L}_p).
                    \]
                    \end{varwidth}
             \State Make $t_p$ an internal node given splitting rule $s$.
@@ -542,7 +539,7 @@ Build a decision tree
 Search for the best split
 \textnormal{
 \begin{algorithmic}[1]
-\Function{FindBestSplit}{$\mathcal{L}$,$X$, $Y$}
+\Function{FindBestSplit}{$\mathcal{L}$, $X$, $Y$}
     \State $\text{best} = -\infty$
     \For{$j \in \{0, \ldots, p-1\}$}
         \State Extract feature values reaching the node
@@ -558,7 +555,7 @@ Search for the best split
         \For{$s$ in $Q(\mathcal{X}_j)$}
             \State Evaluate impurity reduction of splitting rule $s$
                    \[
-                   \text{score} = \Delta{}I(s,X, Y).
+                   \text{score} = \Delta{}I(s, \mathcal{L}).
                    \]
             \If{$\text{score} > \text{best}$}
                 \State $\text{best} =\text{score}$
@@ -637,30 +634,31 @@ Search for the best split
 \subsection{Sparse matrix format}
 
 For memory efficiency and taking advantage of sparsity we use a data structure
-called \emph{scipy.sparse.csc\_matrix}. This data structure has a common use in
-\emph{scikit-learn}. It consists of four parts: \emph{indices}, \emph{indptr},
-\emph{data} and $shape$ which contains the dimensions of the matrix. The
-indices for column $f$ are stored in:
+called compressed sparse column (csc) matrix format. It is a general format to
+represent compactly sparse matrices using three arrays: a $data$ array stores
+the value of each non zero elements, an $indices$ array stores the row index
+of each non zero elements and an $indptr$ array which stores the beginning and
+end of each columns in the $data$ and the $indices$ arrays.
 
-\begin{equation}
-indices[indptr[f]:indptr[f+1]],
-\end{equation}
-with the corresponding values at
-\begin{equation}
-data[indptr[f]:indptr[f+1]].
-\end{equation}
-
-For example if the $indptr$, $indices$, and $data$ of a $(3 \times 3)$ $csc\_matrix$ be the following:
+For instance, this $3 \times 5$ matrix
+\[
+\begin{bmatrix}
+1 & 0 & 0 & 4 & 0 \\
+0 & 0 & 0 & 5 & 0 \\
+0 & 0 & 0 & 0 & 0
+\end{bmatrix}
+\]
+is represented by the following csc matrix with arrays
 \begin{align*}
-indptr &= [0,2,3,6]\\
-indices &= [0,2,2,0,1,2]\\
-data &= [1,2,3,4,5,6]
+inptr &= \begin{bmatrix}0 & 1 & 1 & 1 & 3 & 3\end{bmatrix}, \\
+indices &= \begin{bmatrix}0 & 0 & 1\end{bmatrix}, \\
+data &= \begin{bmatrix}1 & 4 & 5\end{bmatrix}.
 \end{align*}
 
-Then the (dense) matrix itself should be:\\\\
-$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,}[1, 0, 4$\\
-$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,} 0, 0, 5$\\
-$\mbox{\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,}2, 3, 6]$\\
+The main advantages of csc matrices are to allow fast column slicing, efficient
+arithmetic and matrix operations. However, row slicing is slow. Note that a
+similar row-based sparse matrix called compressed sparse row format also exists
+and works under similar principles.
 
 \section{Decision on sparse input data} \label{sec:sparse-input-dt}
 
