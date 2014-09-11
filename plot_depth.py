@@ -6,16 +6,23 @@ import pandas as pd
 import prettyplotlib as ppl
 import matplotlib.pyplot as plt
 
+x = np.array([1, 2, 10])
+
+
 measures = {
     "sparse": np.array([2.6, 5.3, 21.1]),
     "dense": np.array([76.8, 134.1, 472.174]),
+    "sparse unrestricted depth": 68.89 * np.ones_like(x),
+    "dense unrestricted depth": 974.68 * np.ones_like(x),
 }
 
-x = np.array([1, 2, 10])
 
 plt.figure()
-for label in ["sparse", "dense"]:
-    ppl.plot(x, measures[label], "-o", label=label)
+for label in measures:
+    if "unrestricted" in label:
+        ppl.plot(x, measures[label], label=label)
+    else:
+        ppl.plot(x, measures[label], "-o", label=label)
 
 
 
