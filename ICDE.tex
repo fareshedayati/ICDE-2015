@@ -634,13 +634,13 @@ Search for the best split
 \subsection{Sparse matrix format}
 
 For memory efficiency and taking advantage of sparsity we use a data structure
-called compressed sparse column (csc) matrix format. It is general format to
+called compressed sparse column (csc) matrix format. It is a general format to
 represent compactly sparse matrices using three arrays: a $data$ array stores
 the value of each non zero elements, an $indices$ array stores the row index
-of each non zero elements and an $indptr$ array which stores the beginning of
-each columns in the $data$ and the $indices$ arrays.
+of each non zero elements and an $indptr$ array which stores the beginning and
+end of each columns in the $data$ and the $indices$ arrays.
 
-For instance, the matrix $3 \times 5$ matrix
+For instance, this $3 \times 5$ matrix
 \[
 \begin{bmatrix}
 1 & 0 & 0 & 4 & 0 \\
@@ -655,10 +655,10 @@ indices &= \begin{bmatrix}0 & 0 & 1\end{bmatrix}, \\
 data &= \begin{bmatrix}1 & 4 & 5\end{bmatrix}.
 \end{align*}
 
-The main advantages of csc matrix is to allow fast column slicing, efficient
-arithmetic and matrix operations. However, row slicing is slow. A similar
-row-based sparse matrix called compressed sparse row format also exists and
-works under similar principles.
+The main advantages of csc matrix are to allow fast column slicing, efficient
+arithmetic and matrix operations. However, row slicing is slow. Note that a
+similar row-based sparse matrix called compressed sparse row format also exists
+and works under similar principles.
 
 \section{Decision on sparse input data} \label{sec:sparse-input-dt}
 
