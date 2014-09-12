@@ -684,16 +684,28 @@ memory access.
 
 \section{Experiments} \label{sec:experiments}
 
-In the first experiment we trained different decision tree classifiers on the \emph{20 Newsgroups} dataset, changing the $max\_depth$ only and keeping the default values for others, i.e. $min\_samples\_split=2$ and $min\_samples\_leaf=1$. The dataset
-consists of $20000$ news groups documents distributed across $20$ newsgroups
-almost evenly \cite{joachims1996probabilistic}. For each value of $max\_depth$ we trained two decision tree classifiers: one time with the training data represented in a $csc\_matrix$ sparse matrix and one time with the data represented in a dense matrix. For each of these pairs we verified that the trees are identical and compared their training times. As Figure~\ref{depth} shows, the training time with a densely represented matrix is much higher than its sparsely represented counterpart.
+We will first assess the computational performance of the decision tree algorithm on
+the \emph{20 Newsgroups} \cite{joachims1996probabilistic} dataset which
+consists in $n=18846$ document on 20 topics. Each text document was
+transformed into sparse tf-idf vectors of size $p=130107$ with a density of
+$0.001$. We will compare the learning time between the decision tree learnt
+using a sparse csc matrix and a dense array.
+
+In tree-based ensemble methods, decision trees are either shallow tree as used
+in boosting methods or deep tree as random forest ensemble methods. The Figure
+\ref{fig:depth} shows that properly taking into account the sparsity of the
+input space allows to speed up the learning from 14 times for a fully grown
+tree up to 29 times for a decision stump. Furthermore, both algorithm leads
+exactly to the same decision tree structure and have the same generalization
+performance.
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.45]{images/depth.pdf}%20_news_groups.png
-\caption{Training Time for Different $max\_depth$ on Sparse vs. Dense Input
-         (20 News Groups)}
-\label{depth}
+\includegraphics[scale=0.45]{images/depth.pdf}
+\caption{Taking into account the input sparsity allows to speed up deciions
+         tree algorithm for shallow and deep trees on the \emph{20 Newsgroups}
+         dataset.}
+\label{fig:depth}
 \end{figure}
 
 The second experiment was carried out on synthetic data. This time we trained different decision tree classifiers, with $max\_depth = 20$ and keeping the default values for other parameters. We generated random matrices of varying densities
