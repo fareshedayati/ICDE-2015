@@ -327,7 +327,7 @@
 
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Scalable Learning of Sparse Tree-Based Models}
+\title{Scalable Learning of Tree-Based Models on Sparsely Representable Data}
 
 % author names and affiliations
 % use a multiple column layout for up to three different
@@ -731,7 +731,8 @@ suited for sparsely representable data such as text documents.
 
 \section{Conclusion}\label{sec:conclusion}
 
-We proposed a method for building tree-based models with sparse input support. Our method takes advantage of input sparsity by avoiding sorting sample sets of a node along a feature unless they are nonzero. This tweak speeds up training substantially as sorting is a costly but essential and ubiquitous component of tree-based models.
+We proposed a method for building tree-based models with sparse input support. 
+Our method takes advantage of input sparsity by avoiding sorting sample sets of a node along a feature unless they are nonzero at that feature. This approach speeds up training substantially as sorting is a costly but essential and ubiquitous component of tree-based models. 
 
 
 
