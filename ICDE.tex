@@ -711,11 +711,12 @@ performance.
 % As highlighted in the previous section, the performance gain of handling
 % the input sparsity is dependent upon the density of the dataset. The Figure \ref{}
 
-The second experiment was carried out on synthetic data. This time we trained different decision tree classifiers, with a maximal of depth of 20. We generated random input sample
-consisting of $n=100000$ samples, $p=1000$ features with densities
-varying from 0.01 to 0.5 of non zero values.
-For each density we created $10$ random matrices, and each of these matrices
-were represented in a sparse $csc\_matrix$ and a dense matrix and decision tree
+The second experiment was carried out on synthetic data. This time we trained
+different decision tree classifiers, with a maximal of depth of 20. We
+generated random input sample consisting of $n=100000$ samples, $p=1000$
+features and densities varying from 0.01 to 0.5 of non zero values. For each
+density we created $10$ random matrices, and each of these matrices were
+represented in a sparse $csc\_matrix$ and a dense matrix and decision tree
 classifiers were fitted on both formats. Figure~\ref{fig:density} shows the
 average training time for each density with one standard deviation. As the
 figure shows the training time of sparse matrices is much lower that their
