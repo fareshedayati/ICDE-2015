@@ -472,7 +472,7 @@ perspectives.
 We denote by $\mathcal{X}$ an input space and by $\mathcal{Y}$ the output space.
 Without loss of generality, we suppose that $\mathcal{X} = \mathcal{R}^p$ where
 $p$ denotes the number of features. Learning samples are represented by a pair of matrix
-$(X, y) \subseteq (\mathcal{X}, \mathcal{Y})_{i=0}^{n-1}$, where each row
+$(X, Y) \subseteq (\mathcal{X}, \mathcal{Y})_{i=0}^{n-1}$, where each row
 corresponds to a sample and each column to a feature or an output variable.
 
 A decision trees \cite{breiman1984classification} is built  by recursively
@@ -544,8 +544,8 @@ Search for the best split
     \For{$j \in \{0, \ldots, p-1\}$}
         \State Extract feature values reaching the node
                \[
-               \mathcal{X}_j = \{X_{i,j}, \forall i \in \mathcal{L}\}
-               \]
+               \mathcal{X}_j = \{X_{i,j}, \forall i \in \mathcal{L}\}.
+               \] \label{alg-line:value-extract}
         \State Sort $\mathcal{L}$ and $\mathcal{X}_j$ by increasing values
                of $\mathcal{X}_j$.
         \State Generate all possible splitting rules
@@ -568,68 +568,6 @@ Search for the best split
 \end{algorithmic}
 }
 \end{algorithm}
-
-% \begin{algorithmic}
-% % \Function{FIT}{$start =0, end = n, Node, depth$}
-% % \If {$|end - start| < min\_samples\_split$ or $depth > max\_depth$ }
-% % \State $Node.IsLeaf = True$
-% % \State $Node.Class = \,\,Most\,\, frequent\,\,$
-% % \State $\,\,\,\,\,class \,\,of\,\, Y[samples[start:end]]$
-% % \State \Return $Node$
-% % \EndIf
-% % \State $f, t = BestSplit(start, end)$\\
-% % \State \emph{Rearrange $samples[start:end]$}
-% % \State \emph{such that instances in $samples[start:end]$}
-% % \State \emph{with feature $f$ less than $t$ are before}
-% % \State \emph{those that are great than $t$.}
-% % \State \emph{Let $mid$ be an index in the rearranged samples}
-% % \State \emph{such that $X[samples[start:mid], f]$} are less than
-% % \State \emph{$X[samples[mid:end], f]$}\\
-
-% % \If {$|mid - start |$ or $|end - mid| <min\_samples\_leaf$}
-% % \State $Node.IsLeaf = True$
-% % \State $Node.Class = \,\,Most\,\, frequent\,\,$
-% % \State $\,\,\,\,\,class \,\,of\,\, Y[samples[start:end]]$
-% % \State \Return $Node$
-% % \EndIf
-% % \State $Node.Feature = f$
-% % \State $Node.Threshold = t$
-% % \State $Node.LeftNode = new \,\, Node()$
-% % \State $Node.RightNode = new \,\, Node()$
-% % \State FIT($start, mid, Node.LeftNode, depth+1$)
-% % \State FIT($mid, end, Node.RightNode, depth+1$)
-% % \State\Return $Node$
-% % \EndFunction
-% \Function{BestSplit}{start, end}
-% \State $BestThreshold = 0$
-% \State $BestScore = -\infty$
-% \State $BestFeature = 0$
-% \For{$f \in \{1, \cdots, d\}$}
-% \State $Sort(X, samples, f, start, end)$
-% \For{$i \in [start+1:end] $}
-% \State $t = X[samples[i], f]$
-% \State $Y_L = Y[samples[start:i]]$
-% \State $Y_R = Y[samples[i:end]]$.
-% \State $H_L = \mbox{H}(Y_L)$
-% \State $H_R = \mbox{H}(Y_R)$
-% \State $S = H(Y) - \left(\frac{|i - start|}{|end - start|} H_L+\frac{|end - i|}{|end - start|}H_R\right)$
-% \State Where $H(\,\cdot\,)$ is the entropy
-% \State $T = t$
-% \If {$S > bestScore$}
-% \State $BestScore = S$
-% \State $BestThreshold = T$
-% \State $BestFeature = f$
-% \EndIf
-% \EndFor
-% \EndFor \\
-% \Return $BestFeature, BestThreshold$
-% \EndFunction
-% \Function{Sort}{$X, samples, f, start, end$ }
-% \State \emph{Rearrange $samples[start:end]$}
-% \State \emph{by sorting $X[samples[start:end], f]$,}
-% \State \emph{keep $X$ and $Y$ unchanged.}\\
-% \EndFunction
-% \end{algorithmic}
 
 \subsection{Sparse matrix format}
 
@@ -655,12 +593,52 @@ indices &= \begin{bmatrix}0 & 0 & 1\end{bmatrix}, \\
 data &= \begin{bmatrix}1 & 4 & 5\end{bmatrix}.
 \end{align*}
 
-The main advantages of csc matrices are to allow fast column slicing, efficient
-arithmetic and matrix operations. However, row slicing is slow. Note that a
+The main advantages of csc matrices are to allow fast column indexing, efficient
+arithmetic and matrix operations. However, row indexing is slow. Note that a
 similar row-based sparse matrix called compressed sparse row format also exists
 and works under similar principles.
 
-\section{Decision on sparse input data} \label{sec:sparse-input-dt}
+\section{Induce decision trees on sparse input data} \label{sec:sparse-input-dt}
+
+In order to grow decision trees on sparse input matrix, we have to require a
+sparse matrix format with efficient row indexing as the tree works with subset
+of the samples, and also efficient column indexing as features are randomly
+sampled at each node. Furthermore, we hope to speed up the overall
+algorithm by taking into account the input space sparsity. Compressed sparse
+column matrix already satisfy the fast column indexing requirement. We are
+going to show how to efficiently exploit the data structure  as to have fast
+row indexing and speed up the overall algorithm on sparse data.
+
+Given the sparse matrix format, the main issue is to efficiently perform the
+extraction of the feature value reaching the node (the line \ref{alg-line:value-extract}
+of Algorithm \ref{algo:find-best-split}). Otherwise said for a
+given feature $j$, one have to be able to perform the intersection between the
+sample set $\mathcal{L}$ which have reached the node and the $m_j=indptr[j+1] -
+indptr[j]$  non zero element of the feature $j$ as to generate the set of
+possible splitting rule.  Once this is done, we will be able to speed up the
+split search by treating separately splitting rule with positive and negative
+thresholds. If we assume that the $indices$ of the input csc matrix
+array are sorted per column, then standard intersection
+algorithms have the following time complexity:
+\begin{enumerate}
+\item in $O(|\mathcal{L}| \log{m_j})$ by performing $|\mathcal{L}| $ binary
+search on the sorted $m_j$ non zero elements;
+\item in $O(|\mathcal{L}|\log{|\mathcal{L}|} + m_j\log{|\mathcal{L}|})$
+by sorting the sample set $\mathcal{L}$ and performing $m_j$ binary search on
+$\mathcal{L}$;
+\item in $O(|\mathcal{L}|\log{|\mathcal{L}|} + m_j + |\mathcal{L}|)$ by sorting the
+sample set $\mathcal{L}$ and retrieve the intersection by iterating over both
+array;
+\item in $O(m_j + |\mathcal{L}|)$ by first creating a temporary hash table from the
+smallest array and then checking if elements of the second array are contained
+in the hashtable.
+\end{enumerate}
+
+The approach developed in this paper allow to perform the intersection
+between any column of the csc input sparse matrix and the sample set
+$\mathcal{L}$ in a time complexity which is faster than the hash table
+approach.
+
 
 The only part of the $BestFit$ algorithm of the previous section that changes
 is the way we sort the training matrix along a feature. For a given feature $f$
@@ -688,22 +666,12 @@ $indices[indptr[f]:indptr[f+1]]$ when their corresponding $index\_to\_samples$
 is between $start$ and $end$.
 
 We define the following four variables for the current feature $f$:
-\begin{equation}
-n\_indices_f = indptr[f+1] - indptr[f]
-\end{equation}
-\begin{equation}
-n\_samples = end - start,
-\end{equation}
-
-\begin{equation}
-\label{S}
-S = n\_samples  \times \log(n\_samples)
-\end{equation}
-
-\begin{equation}
-\label{B}
-B_f = n\_samples  \times \log(n\_indices_f)
-\end{equation}
+\begin{align}
+n\_indices_f &= indptr[f+1] - indptr[f] \\
+n\_samples &= end - start, \\
+S &= n\_samples  \times \log(n\_samples) \label{S} \\
+B_f &= n\_samples  \times \log(n\_indices_f) \label{B}
+\end{align}
 
 Sorting of $samples[start:end]$ takes time $S$ (equation~\ref{S})
 and binary search of instances of $samples[start:end]$ in
@@ -743,7 +711,7 @@ Finally note that for testing the sparse data is flattened for efficient random 
 
 In the first experiment we trained different decision tree classifiers on the \emph{20 Newsgroups} dataset, changing the $max\_depth$ only and keeping the default values for others, i.e. $min\_samples\_split=2$ and $min\_samples\_leaf=1$. The dataset
 consists of $20000$ news groups documents distributed across $20$ newsgroups
-almost evenly \cite{joachims1996probabilistic}. For each value of $max\_depth$ we trained two decision tree classifiers: one time with the training data represented in a $csc\_matrix$ sparse matrix and one time with the data represented in a dense matrix. For each of these pairs we verified that the trees are identical and compared their training times. As Figure~\ref{depth} shows, the training time with a densely represented matrix is much higher than its sparsely represented counterpart. 
+almost evenly \cite{joachims1996probabilistic}. For each value of $max\_depth$ we trained two decision tree classifiers: one time with the training data represented in a $csc\_matrix$ sparse matrix and one time with the data represented in a dense matrix. For each of these pairs we verified that the trees are identical and compared their training times. As Figure~\ref{depth} shows, the training time with a densely represented matrix is much higher than its sparsely represented counterpart.
 
 The second experiment was carried out on synthetic data. This time we trained different decision tree classifiers, with $max\_depth = 20$ and keeping the default values for other parameters. We generated random matrices of varying densities
 each of size $100000 \times 1000$. Density is the percentage
