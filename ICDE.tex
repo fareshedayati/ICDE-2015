@@ -628,7 +628,7 @@ $\mathcal{L}_p$;
 sample set $\mathcal{L}_p$ and retrieving the intersection by iterating over both
 arrays;
 \item in $O(m_j + |\mathcal{L}_p|)$ by first creating a temporary hash table from the
-a first array and then checking if elements of the second array are contained
+one array and then checking if elements of the other array are contained
 in the hash table.
 \end{enumerate}
 
@@ -675,8 +675,8 @@ m_j$, the binary approach will be faster.
 
 During the tree growth, one could remember which features are constant for a
 subset of the samples $\mathcal{L}_p$ and a given node $t_p$. For all
-descendant of node $t_p$, this will avoid the overhead of searching for a best
-split where none exists.
+descendant of node $t_p$, this will avoid the overhead of searching for a
+split where none exists for those features.
 
 Finally note that for testing the sparse data is flattened for efficient random
 memory access.
