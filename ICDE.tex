@@ -723,16 +723,16 @@ Benchmarking with different values of $c$, we came up with the following heurist
 \begin{algorithmic}
 \If{$samples[start:end]$ is sorted}
 	\If{$ B_f < 0.10 \times n\_indices_f $}
-	\State Carry on the binary search
+	\State Conduct a binary search
 	\Else
-	\State  Carry on the reverse index search
+	\State  Conduct a reverse index search
 	\EndIf
 \Else
 	\If{$ S + B_f < 0.10 \times n\_indices_f $}
 	\State Sort $samples[start:end]$.
-	\State Carry on the binary search
+	\State Conduct a  binary search
 	\Else
-	\State  Carry on the reverse index search
+	\State  Conduct a reverse index search
 	\EndIf
 \EndIf
 \end{algorithmic}
@@ -741,26 +741,16 @@ Finally note that for testing the sparse data is flattened for efficient random 
 
 \section{Experiments} \label{sec:experiments}
 
-The first test was carried on the \emph{20 Newsgroups} dataset. The dataset
+In the first experiment we trained different decision tree classifiers on the \emph{20 Newsgroups} dataset, changing the $max\_depth$ only and keeping the default values for others, i.e. $min\_samples\_split=2$ and $min\_samples\_leaf=1$. The dataset
 consists of $20000$ news groups documents distributed across $20$ newsgroups
-almost evenly \cite{joachims1996probabilistic}. Training data was carried on with
-different parameters of $max\_depth$ and the training data was represented once in a $csc\_matrix$ sparse matrix
-and once with a dense matrix. As  Figure~\ref{depth} shows,
-the training time with a densely represented matrix is much higher than the in their sparsely represented
-counterparts. We verified that all $4$ fitted trees were identical.
+almost evenly \cite{joachims1996probabilistic}. For each value of $max\_depth$ we trained two decision tree classifiers: one time with the training data represented in a $csc\_matrix$ sparse matrix and one time with the data represented in a dense matrix. For each of these pairs we verified that the trees are identical and compared their training times. As Figure~\ref{depth} shows, the training time with a densely represented matrix is much higher than its sparsely represented counterpart. 
 
-The second set of tests were carried on synthetic data. Random matrices were
-generated with $n\_samples = 100000$, and $n\_features = 1000$  and with varying densities. Density is the percentage
-of non-zero values of a feature. For example a density of $0.1$ means that
-every feature is only $10\%$ of the time non-zero. For each density we created $10$ random matrices. Each matrix was represented
-both in a sparse and dense format. Decision trees were fitted once with the
-sparse and once in the dense format. Figure~\ref{density} contains the training
-time of these matrices. As it can be seen in this figure
-the training time of sparse matrices is much lower that their dense
-counterparts when the density of matrix is quite low, i.e. less $0.2$. For not-
-quite sparse matrices, e.g. $density = 0.5$, the training time with dense
+The second experiment was carried out on synthetic data. This time too, we trained different decision tree classifiers, with $max\_depth = 20$ and keeping the default values for other parameters. We generated random matrices of varying densities
+each of size $100000 \times 1000$. Density is the percentage
+of non-zero values for each feature. For example in a matrix with $density=0.1$ every feature is $10\%$ of the time non-zero. For each density we created $10$ random matrices, and each of these matrices were represented in a sparse $csc\_matrix$ and a dense matrix and decision tree classifiers were fitted on both formats. Figure~\ref{density} shows the average training time for each density with one standard deviation. As this figure shows the training time of sparse matrices is much lower that their dense
+counterparts when the density of matrix is quite low, i.e. less $0.2$. On the other hand when the density is not low, e.g. $density = 0.5$, training time with dense
 inputs is lower than their sparse counterparts. As this figure suggests
-$csc\_matrix$ should only be used in sparse data, e.g. textual data.
+$csc\_matrix$ should only be used when the data is really sparse, e.g. textual data.
 
 \begin{figure}
 \centering
@@ -806,7 +796,7 @@ The conclusion goes here.
 \section*{Acknowledgment} % use section* for acknowledgement
 
 Arnaud Joly is research fellow of the FNRS,
-Belgium. This work is supported by PASCAL2 and the IUAP DYSCO, initiated by
+Belgium. This work is partially supported by PASCAL2 and the IUAP DYSCO, initiated by
 the Belgian State, Science Policy Office.
 
 % trigger a \newpage just before the given reference
