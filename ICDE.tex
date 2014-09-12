@@ -387,8 +387,8 @@
 Many machine learning tasks such as text annotation usually require
 training over very big datasets, e.g., millions of web documents,
 that can be represented in a sparse input space. State-of-the-art tree-based ensemble
-algorithms cannot scale to such datasets, since they involve
-operations that are linear on the input space size. %and
+algorithms cannot scale to such datasets, since they include operations whose running time 
+is a function of the input space size rather than a function of the non-zero input elements. %and
 %implementations have focused on tasks with dense input space, while at most
 %emulating random memory access on sparse input data. 
 In this paper, we propose an
@@ -751,7 +751,7 @@ Our method takes advantage of input sparsity by avoiding sorting sample sets of 
 
 
 
-\section*{Acknowledgment} % use section* for acknowledgement
+\section{Acknowledgment} % use section* for acknowledgement
 
 Arnaud Joly is a research fellow of the FNRS,
 Belgium. This work is partially supported by PASCAL2 and the IUAP DYSCO, initiated by
