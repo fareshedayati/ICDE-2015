@@ -610,13 +610,13 @@ going to show how to efficiently exploit the data structure  as to have fast
 row indexing and speed up the overall algorithm on sparse data.
 
 Given the sparse matrix format, the main issue is to efficiently perform the
-extraction of the feature value reaching the node (the line \ref{alg-line:value-extract}
+extraction of the sample values reaching the node (the line \ref{alg-line:value-extract}
 of Algorithm \ref{algo:find-best-split}). Otherwise said for a
 given feature $j$, one have to be able to perform the intersection between the
 sample set $\mathcal{L}$ which have reached the node and the $m_j=indptr[j+1] -
-indptr[j]$  non zero element of the feature $j$ as to generate the set of
-possible splitting rule.  Once this is done, we will be able to speed up the
-split search by treating separately splitting rule with positive and negative
+indptr[j]$  non zero elements of the feature $j$ as to generate the set of
+possible splitting rules.  Once this is done, we will be able to speed up the
+split search by treating separately splitting rules with positive and negative
 thresholds. If we assume that the $indices$ of the input csc matrix
 array are sorted per column, then standard intersection
 algorithms have the following time complexity:
@@ -627,28 +627,20 @@ search on the sorted $m_j$ non zero elements;
 by sorting the sample set $\mathcal{L}$ and performing $m_j$ binary search on
 $\mathcal{L}$;
 \item in $O(|\mathcal{L}|\log{|\mathcal{L}|} + m_j + |\mathcal{L}|)$ by sorting the
-sample set $\mathcal{L}$ and retrieve the intersection by iterating over both
-array;
+sample set $\mathcal{L}$ and retrieving the intersection by iterating over both
+arrays;
 \item in $O(m_j + |\mathcal{L}|)$ by first creating a temporary hash table from the
-smallest array and then checking if elements of the second array are contained
+a first array and then checking if elements of the second array are contained
 in the hashtable.
 \end{enumerate}
 
-The approach developed in this paper allow to perform the intersection
-between any column of the csc input sparse matrix and the sample set
-$\mathcal{L}$ in a time complexity which is faster than the hash table
-approach.
+Nevertheless in the context of a decision tree, it's possible to perform the
+intersection between any column of the csc input sparse matrix and the sample
+set $\mathcal{L}$ faster than the hash table approach.
 
 
-The only part of the $BestFit$ algorithm of the previous section that changes
-is the way we sort the training matrix along a feature. For a given feature $f$
-we first find all instances in $samples[start:end]$ where feature $f$ is non-
-zero. We, then sort the positive and negative parts separately and rearrange
-$samples[start:end]$ accordingly.
 
-The real challenge in finding instances in $samples[start:end]$ with non-zero values
-of $f$ is that of finding the intersection of $indices[indptr[f]:indptr[f+1]]$
-and $samples[start:end]$. Depending on the size of these two sets we can either
+Depending on the size of these two sets we can either
 perform a binary search or a \emph{reverse index} search. For the latter end we need an
 additional auxiliary data structure: $index\_to\_samples$ which basically is
 a reverse map of $samples$ to its indices, i.e. $index\_to\_samples[j] = i$
