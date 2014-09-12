@@ -743,54 +743,62 @@ Finally note that for testing the sparse data is flattened for efficient random 
 
 The first test was carried on the \emph{20 Newsgroups} dataset. The dataset
 consists of $20000$ news groups documents distributed across $20$ newsgroups
-almost evenly \cite{joachims1996probabilistic}. Training was carried on with
-different parameters of $max\_depth$, once with the $csc\_matrix$ sparse matrix
-and once with dense matrix. As it can be seen in Figure~\ref{20 news groups},
-the training time with dense inputs is much higher than the in their sparse
-counterparts. We verified that all $4$ fitted trees are identical.
+almost evenly \cite{joachims1996probabilistic}. Training data was carried on with
+different parameters of $max\_depth$ and the training data was represented once in a $csc\_matrix$ sparse matrix
+and once with a dense matrix. As  Figure~\ref{depth} shows,
+the training time with a densely represented matrix is much higher than the in their sparsely represented
+counterparts. We verified that all $4$ fitted trees were identical.
 
 The second set of tests were carried on synthetic data. Random matrices were
-generated with different shapes and densities where a density is the percentage
+generated with $n\_samples = 100000$, and $n\_features = 1000$  and with varying densities. Density is the percentage
 of non-zero values of a feature. For example a density of $0.1$ means that
-every feature is only $10\%$ of the time non-zero. Each matrix was represented
+every feature is only $10\%$ of the time non-zero. For each density we created $10$ random matrices. Each matrix was represented
 both in a sparse and dense format. Decision trees were fitted once with the
-sparse and once in the dense format. Table~\ref{density} contains the training
-time of these matrices (the last two columns). As it can be seen in this table
+sparse and once in the dense format. Figure~\ref{density} contains the training
+time of these matrices. As it can be seen in this figure
 the training time of sparse matrices is much lower that their dense
-counterparts when the density of matrix is quite low, i.e. less $0.1$. For no-
+counterparts when the density of matrix is quite low, i.e. less $0.2$. For not-
 quite sparse matrices, e.g. $density = 0.5$, the training time with dense
-inputs is lower than their sparse counterparts. As this table suggests
+inputs is lower than their sparse counterparts. As this figure suggests
 $csc\_matrix$ should only be used in sparse data, e.g. textual data.
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.7]{20_news_groups.png}
+\includegraphics[scale=0.45]{images/depth.pdf}%20_news_groups.png
 \caption{Training Time for Different $max\_depth$ on Sparse vs. Dense Input
          (20 News Groups)}
-\label{20 news groups}
+\label{depth}
 \end{figure}
 
-\begin{table}[h]
-\caption {Training Time in Seconds with Sparse and Dense Inputs} \label{density}
-\begin{tabular}{|l|l|l||l|l|l|}
-  \hline
-Dataset Size	&	Feature Size	&	density	&	 Sparse Input	&	Dense Input	\\
-  \hline
-10000	  &	1000	&	0.01	&	4.74	&	25.07	\\
-100000	&	100	&	0.01	&	7.26	&	24.65	\\
-100000	&	1000	&	0.01	&	89.13	&	507.86	\\
-10000	  &	1000	&	0.05	&	9.82	&	16.14	\\
-100000	&	100	&	0.05	&	21.14	&	28.27	\\
-100000	&	1000	&	0.05	&	256.68	&	541.00	\\
-10000	  &	1000	&	0.1	&	13.42	&	12.38	\\
-100000 	&	100	&	0.1	&	37.81	&	24.65	\\
-100000	&	1000	&	0.1	&	437.14	&	370.60	\\
-10000	  &	1000	&	0.5	&	28.97	&	14.02	\\
-100000	&	100	&	0.5	&	100.22	&	28.13	\\
-100000	&	1000	&	0.5	&	949.14	&	383.62 \\
- \hline
-\end{tabular}
-\end{table}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.45]{images/density.pdf}
+\caption{Training Time of Random Matrices with $n\_samples = 100000$, $n\_features = 1000$ and Different Densities on Sparse vs. Dense Input}
+\label{density}
+\end{figure}
+
+%\begin{table}[h]
+%\caption {Training Time in Seconds with Sparse and Dense Inputs} \label{density}
+%\begin{tabular}{|l|l|l||l|l|l|}
+%  \hline
+%Dataset Size	&	Feature Size	&	density	&	 Sparse Input	&	Dense Input	\\
+%  \hline
+%10000	  &	1000	&	0.01	&	4.74	&	25.07	\\
+%100000	&	100	&	0.01	&	7.26	&	24.65	\\
+%100000	&	1000	&	0.01	&	89.13	&	507.86	\\
+%10000	  &	1000	&	0.05	&	9.82	&	16.14	\\
+%100000	&	100	&	0.05	&	21.14	&	28.27	\\
+%100000	&	1000	&	0.05	&	256.68	&	541.00	\\
+%10000	  &	1000	&	0.1	&	13.42	&	12.38	\\
+%100000 	&	100	&	0.1	&	37.81	&	24.65	\\
+%100000	&	1000	&	0.1	&	437.14	&	370.60	\\
+%10000	  &	1000	&	0.5	&	28.97	&	14.02	\\
+%100000	&	100	&	0.5	&	100.22	&	28.13	\\
+%100000	&	1000	&	0.5	&	949.14	&	383.62 \\
+% \hline
+%\end{tabular}
+%\end{table}
 
 \section{Conclusion}\label{sec:conclusion}
 The conclusion goes here.
