@@ -745,12 +745,11 @@ In the first experiment we trained different decision tree classifiers on the \e
 consists of $20000$ news groups documents distributed across $20$ newsgroups
 almost evenly \cite{joachims1996probabilistic}. For each value of $max\_depth$ we trained two decision tree classifiers: one time with the training data represented in a $csc\_matrix$ sparse matrix and one time with the data represented in a dense matrix. For each of these pairs we verified that the trees are identical and compared their training times. As Figure~\ref{depth} shows, the training time with a densely represented matrix is much higher than its sparsely represented counterpart. 
 
-The second experiment was carried out on synthetic data. This time too, we trained different decision tree classifiers, with $max\_depth = 20$ and keeping the default values for other parameters. We generated random matrices of varying densities
+The second experiment was carried out on synthetic data. This time we trained different decision tree classifiers, with $max\_depth = 20$ and keeping the default values for other parameters. We generated random matrices of varying densities
 each of size $100000 \times 1000$. Density is the percentage
-of non-zero values for each feature. For example in a matrix with $density=0.1$ every feature is $10\%$ of the time non-zero. For each density we created $10$ random matrices, and each of these matrices were represented in a sparse $csc\_matrix$ and a dense matrix and decision tree classifiers were fitted on both formats. Figure~\ref{density} shows the average training time for each density with one standard deviation. As this figure shows the training time of sparse matrices is much lower that their dense
-counterparts when the density of matrix is quite low, i.e. less $0.2$. On the other hand when the density is not low, e.g. $density = 0.5$, training time with dense
-inputs is lower than their sparse counterparts. As this figure suggests
-$csc\_matrix$ should only be used when the data is really sparse, e.g. textual data.
+of non-zero values for each feature. For example in a matrix with $density=0.1$ every feature is $10\%$ of the time non-zero. For each density we created $10$ random matrices, and each of these matrices were represented in a sparse $csc\_matrix$ and a dense matrix and decision tree classifiers were fitted on both formats. Figure~\ref{density} shows the average training time for each density with one standard deviation. As the figure shows the training time of sparse matrices is much lower that their dense
+counterparts when the density of the matrix is quite low, i.e. less than $0.2$. On the other hand when the density is high, e.g. $density = 0.5$, the training time with dense matrices
+input is lower than their sparse counterparts. The figure suggests that $csc\_matrix$ should only be used when the data is really sparse, e.g. with textual data.
 
 \begin{figure}
 \centering
