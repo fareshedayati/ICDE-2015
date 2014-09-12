@@ -384,13 +384,28 @@
 
 \begin{abstract}
 
-Many machine learning tasks such as text annotation involve sparsely
-representable input space. State-of-the-art tree-based ensemble algorithms and
-implementations have focused on tasks with dense input space, while at most
-emulating random memory access on sparse input data. We propose a fast and an
+Many machine learning tasks such as text annotation usually require
+training over very big datasets, e.g., millions of web documents,
+that can be represented in a sparse input space. State-of-the-art tree-based ensemble
+algorithms cannot scale to such datasets, since they involve
+operations that are linear on the input space size. %and
+%implementations have focused on tasks with dense input space, while at most
+%emulating random memory access on sparse input data. 
+In this paper, we propose an
 efficient splitting algorithm to leverage input sparsity within decision tree
-methods. We exploit the a-priori knowledge that each column have very few non-
-zero elements and show how learning time is significantly decreased.
+methods. %We exploit the a-priori knowledge that each column has very few non-
+%zero elements and show how learning time is significantly decreased.
+Our algorithm improves training time over sparse datasets by more than
+one order of magnitude and it will be incorporated in the next version
+of Scikit Learn, the most popular open source Python machine learning library.
+
+%Many machine learning tasks such as text annotation involve sparsely
+%representable input space. State-of-the-art tree-based ensemble algorithms and
+%implementations have focused on tasks with dense input space, while at most
+%emulating random memory access on sparse input data. We propose a fast and an
+%efficient splitting algorithm to leverage input sparsity within decision tree
+%methods. We exploit the a-priori knowledge that each column have very few non-
+%zero elements and show how learning time is significantly decreased.
 
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
