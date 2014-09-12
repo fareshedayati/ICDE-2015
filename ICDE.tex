@@ -327,7 +327,7 @@
 
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Leveraging Input Space Sparsity\\ to Scale Tree-Based Models}
+\title{Scalable Learning of Sparse Tree-Based Models}
 
 % author names and affiliations
 % use a multiple column layout for up to three different
@@ -431,7 +431,7 @@ forest \cite{breiman2001random} or gradient tree boosting
 \cite{friedman2001greedy}, are some of the most robust and widely-used
 supervised machine learning. All these methods have in common that they use
 randomized decision trees as a base learner. This building block is a
-hierarchical model which divide the input space through a serie of binary
+hierarchical model which divide the input space through a series of binary
 splitting rules which partition the input space . Predictions of a decision tree is obtained by
 following the tree structure until reaching a leaf. In the ensemble framework, those models are either averaged
 \cite{breiman2001random} or learnt sequentially \cite{freund1995desicion},
@@ -470,8 +470,8 @@ perspectives.
 \subsection{Induction of decision trees}
 
 We denote by $\mathcal{X}$ an input space and by $\mathcal{Y}$ the output space.
-Without loss of generality, we suppose that $\mathcal{X} = \mathcal{R}^p$ where
-$p$ denotes the number of features. Learning samples are represented by a pair of matrix
+Without loss of generality, we suppose that $\mathcal{X} = \mathcal{R}^m$ where
+$m$ denotes the number of features. Learning samples are represented by a pair of matrix
 $(X, Y) \subseteq (\mathcal{X}, \mathcal{Y})_{i=0}^{n-1}$, where each row
 corresponds to a sample and each column to a feature or an output variable.
 
@@ -491,13 +491,13 @@ as regularization parameters. Leaves are labeled by the output mean in
 regression or by the class frequencies in classification with reaching training
 samples. The recursive induction of the decision decision is described
 by Algorithm~\ref{algo:tree-induction} and the search for the best split
-is described by  Algorithm~\ref{algo:find-best-split}.
+is described by Algorithm~\ref{algo:find-best-split}. Note that sorting samples (Line~\ref{alg-line:sorting}) in a node along different features is at the core of Algorithm~\ref{algo:find-best-split}; it speeds up computation of the impurity measure for all possible splitting thresholds in an incremental manner. 
 
 In the context of ensemble, tree are further randomized by searching for the
 best split among $k$ features at each node and also might be induced on a
 bootstrap copy of the samples. The tree can be grown alternatively in a best-first
 search manner by replacing the stack of Algorithm~\ref{algo:tree-induction}
-by a priority queue where priority is defined by expected impurity reduction.
+by a priority queue where priority is defined by expected impurity reduction. 
 
 \begin{algorithm}\label{algo:tree-induction}
 Build a decision tree
@@ -515,10 +515,11 @@ Build a decision tree
         \Else
             \State \begin{varwidth}[t]{0.8\linewidth}
                    Find a splitting rule $s^*$ which maximizes impurity reduction
-                   among possible splitting rules $Q(\mathcal{L}_p, X)$:
-                   \[
-                   s^* = \arg\max_{s \in Q(\mathcal{L}_p, X)} \Delta{}I(s, \mathcal{L}_p).
-                   \]
+                   among possible splitting rules: \\\\%$Q(\mathcal{L}_p, X)$:\\\\
+                   $
+                   s^* =  {FindBestSplit}(\mathcal{L}_p, X,Y)\\
+                   %\arg\max_{s \in Q(\mathcal{L}_p, X)} \Delta{}I(s, \mathcal{L}_p).
+                   $
                    \end{varwidth}
             \State Make $t_p$ an internal node given splitting rule $s$.
             \State Partition $\mathcal{L}_p$ into $\mathcal{L}_r$ and
@@ -538,23 +539,23 @@ Build a decision tree
 Search for the best split
 \textnormal{
 \begin{algorithmic}[1]
-\Function{FindBestSplit}{$\mathcal{L}$, $X$, $Y$}
+\Function{FindBestSplit}{$\mathcal{L}_p$, $X$, $Y$}
     \State $\text{best} = -\infty$
-    \For{$j \in \{0, \ldots, p-1\}$}
+    \For{$j \in \{0, \ldots, m-1\}$}
         \State Extract feature values reaching the node
                \[
-               \mathcal{X}_j = \{X_{i,j}, \forall i \in \mathcal{L}\}.
+               \mathcal{F}_j = \{X_{i,j}, \forall i \in \mathcal{L}_p\}.
                \] \label{alg-line:value-extract}
-        \State Sort $\mathcal{L}$ and $\mathcal{X}_j$ by increasing values
-               of $\mathcal{X}_j$.  \label{alg-line:sorting}
+        \State Sort $\mathcal{L}_p$ and $\mathcal{F}_j$ by increasing values
+               of $\mathcal{F}_j$.  \label{alg-line:sorting}
         \State Generate all possible splitting rules
                \[
-               Q(\mathcal{X}_j)=\{((x_j \leq \nu), (x_j > \nu))| \nu \in \mathcal{X}_j)
+               Q(\mathcal{F}_j)=\{((x_j \leq \nu), (x_j > \nu))| \nu \in \mathcal{F}_j)
                \]
-        \For{$s$ in $Q(\mathcal{X}_j)$}
+        \For{$s$ in $Q(\mathcal{F}_j)$}
             \State Evaluate impurity reduction of splitting rule $s$
                    \[
-                   \text{score} = \Delta{}I(s, \mathcal{L}).
+                   \text{score} = \Delta{}I(s, \mathcal{L}_p).
                    \]
             \If{$\text{score} > \text{best}$}
                 \State $\text{best} =\text{score}$
@@ -606,15 +607,14 @@ sampled at each node. Furthermore, we hope to speed up the overall algorithm by
 taking into account the input space sparsity. Compressed sparse column matrix
 already satisfies the fast column indexing requirement. We are going to show
 how to efficiently exploit the data structure as to have a fast row indexing
-and use the proposed approach to speed up the overall algorithm on sparse data.
+and use the proposed approach to speed up the overall algorithm on sparse data. At the core of our proposed method is a fast sorting algorithm (a substitute for Line~\ref{alg-line:value-extract} in Algorithm~\ref{algo:find-best-split}) that works with non-zero values of a feature, sorts the positive and negative parts separately, and rearranges the sample set accordingly. 
 
 Given the sparse matrix format, the main issue is to efficiently perform the
 extraction of the sample values reaching the node (the line \ref{alg-line:value-extract}
 of Algorithm \ref{algo:find-best-split}). Note that this is the only operation which requires interaction
-with the input matrix data. Otherwise said for a
-given feature $j$, one have to be able to perform the intersection between the
+with the input matrix data. Otherwise said for a given feature $j$, one have to be able to perform the intersection between the
 sample set $\mathcal{L}_p$ which have reached the node and the $m_j=indptr[j+1] -
-indptr[j]$  non zero elements of the feature $j$ as to generate a set of
+indptr[j]$ non zero elements of the feature $j$ as to generate a set of
 possible splitting rules. If we assume that the $indices$ of the input csc matrix
 array are sorted per column, then standard intersection
 algorithms have the following time complexity:
@@ -622,7 +622,7 @@ algorithms have the following time complexity:
 \item in $O(|\mathcal{L}_p| \log{m_j})$ by performing $|\mathcal{L}_p| $ binary
 search on the sorted $m_j$ non zero elements;
 \item in $O(|\mathcal{L}_p|\log{|\mathcal{L}_p|} + m_j\log{|\mathcal{L}_p|})$
-by sorting the sample set $\mathcal{L}$ and performing $m_j$ binary search on
+by sorting the sample set $\mathcal{L}_p$ and performing $m_j$ binary search on
 $\mathcal{L}_p$;
 \item in $O(|\mathcal{L}_p|\log{|\mathcal{L}_p|} + m_j + |\mathcal{L}_p|)$ by sorting the
 sample set $\mathcal{L}_p$ and retrieving the intersection by iterating over both
@@ -687,7 +687,7 @@ memory access.
 We will first assess the computational performance of the decision tree algorithm on
 the \emph{20 Newsgroups} \cite{joachims1996probabilistic} dataset which
 consists in $n=11314$ document on 20 topics. Each text document was
-transformed into sparse tf-idf vectors of size $p=130107$ with a density of
+transformed into sparse tf-idf vectors of size $m=130107$ with a density of
 $0.001$. We will compare the learning time between the decision tree learnt
 using a sparse csc matrix and a dense array.
 
@@ -709,7 +709,7 @@ performance.
 \end{figure}
 
 As a second experiment, we generated random binary classification tasks with
-$n=100000$ samples and $p=1000$ features. The input matrices are sparse random
+$n=100000$ samples and $m=1000$ features. The input matrices are sparse random
 matrices whose non zeros element are drawn uniformly in $[0, 1)$. Their density
 are ranging from $0.01$ to $0.5$. Each point is averaged over 20 experiments
 and the maximal depth of the decision tree is restricted to 20. As illustrated
@@ -730,7 +730,10 @@ suited for sparsely representable data such as text documents.
 
 
 \section{Conclusion}\label{sec:conclusion}
-The conclusion goes here.
+
+We proposed a method for building tree-based models with sparse input support. Our method takes advantage of input sparsity by avoiding sorting sample sets of a node along a feature unless they are nonzero. This tweak speeds up training substantially as sorting is a costly but essential and ubiquitous component of tree-based models.
+
+
 
 \section*{Acknowledgment} % use section* for acknowledgement
 
