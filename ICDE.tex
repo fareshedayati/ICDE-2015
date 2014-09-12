@@ -665,20 +665,21 @@ sample set $\mathcal{L}_p$ into two partition $\mathcal{L}_r$ and
 $\mathcal{L}_r$ (line~ \ref{alg-line:partition} of Algorithm~\ref{algo:tree-induction})
 given a split on feature $j$ in $O(m_j)$ instead of $O(n)$.
 
-In practice, the number of non zero element $m_j$ of features $j$
-could be a lot bigger than the size of a sample set $\mathcal{L}_p$. For instance,
- this is likely to happen near the leaves nodes whenever tree are fully developed.
-There is only a few   samples reaching those nodes. For optimal performance,
-one can use a hybrid intersection algorithm which combines the previously
-developed mapping approach to approach (1) based on binary search. whenever
-$\mathcal{L}_p \ll m_j$, the binary approach is likely to be faster.
+In practice, the number of non zero elements $m_j$ of feature $j$ could be a
+lot bigger than the size of a sample set $\mathcal{L}_p$. This is likely to
+happen near the leaf nodes. Whenever the tree is fully developed, there are
+only a few   samples reaching those nodes. For optimal performance, one can use
+a hybrid intersection approach which combines the previously developed mapping
+intersection to approach (1) based on binary search. whenever $\mathcal{L}_p \ll
+m_j$, the binary approach is likely to be faster.
 
-In the context of sparse data, one more optimization that could be made is
-to remember which features are constant. During the tree growth, this will
-avoid the overhead of searching for a best split where none exists.
+During the tree growth, one could remember which features are constant for a
+subset of the samples $\mathcal{L}_p$ and a given node $t_p$. For all
+descendant of node $t_p$, this will avoid the overhead of searching for a best
+split where none exists.
 
-
-Finally note that for testing the sparse data is flattened for efficient random memory access.
+Finally note that for testing the sparse data is flattened for efficient random
+memory access.
 
 \section{Experiments} \label{sec:experiments}
 
