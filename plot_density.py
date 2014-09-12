@@ -36,8 +36,8 @@ ax.set_xlim(0., 0.51)
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 
-ax.set_xlabel("Density")
-ax.set_ylabel("Time[s]")
+ax.set_xlabel("Input space density")
+ax.set_ylabel("Time [s]")
 # ax.xaxis.set_major_locator(MaxNLocator(6, prune=None))
 # ax.yaxis.set_major_locator(MaxNLocator(6, prune=None))
 

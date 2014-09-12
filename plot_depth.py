@@ -51,7 +51,7 @@ ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 
 ax.set_xlabel("Maximal depth")
-ax.set_ylabel("Time[s]")
+ax.set_ylabel("Time [s]")
 
 # ax.xaxis.set_major_locator(MaxNLocator(6, prune=None))
 # ax.yaxis.set_major_locator(MaxNLocator(6, prune=None))
