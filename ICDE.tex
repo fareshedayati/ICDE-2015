@@ -121,6 +121,7 @@
 \usepackage{algpseudocode}
 \usepackage{varwidth}
 \usepackage{graphicx}
+\graphicspath{{./images}}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true}
 
@@ -129,25 +130,24 @@
 
 
 % *** GRAPHICS RELATED PACKAGES ***
-%
-\ifCLASSINFOpdf
-  % \usepackage[pdftex]{graphicx}
-  % declare the path(s) where your graphic files are
-  % \graphicspath{{../pdf/}{../jpeg/}}
-  % and their extensions so you won't have to specify these with
-  % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
-\else
-  % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
-  % will default to the driver specified in the system graphics.cfg if no
-  % driver is specified.
-  % \usepackage[dvips]{graphicx}
-  % declare the path(s) where your graphic files are
-  % \graphicspath{{../eps/}}
-  % and their extensions so you won't have to specify these with
-  % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.eps}
-\fi
+% \ifCLASSINFOpdf
+%   % \usepackage[pdftex]{graphicx}
+%   % declare the path(s) where your graphic files are
+%   % \graphicspath{{../pdf/}{../jpeg/}}
+%   % and their extensions so you won't have to specify these with
+%   % every instance of \includegraphics
+%   % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+% \else
+%   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
+%   % will default to the driver specified in the system graphics.cfg if no
+%   % driver is specified.
+%   % \usepackage[dvips]{graphicx}
+%   % declare the path(s) where your graphic files are
+%   % \graphicspath{{../eps/}}
+%   % and their extensions so you won't have to specify these with
+%   % every instance of \includegraphics
+%   % \DeclareGraphicsExtensions{.eps}
+% \fi
 % graphicx was written by David Carlisle and Sebastian Rahtz. It is
 % required if you want graphics, photos, etc. graphicx.sty is already
 % installed on most LaTeX systems. The latest version and documentation can
@@ -499,7 +499,6 @@ bootstrap copy of the samples. The tree can be grown alternatively in a best-fir
 search manner by replacing the stack of Algorithm~\ref{algo:tree-induction}
 by a priority queue where priority is defined by expected impurity reduction.
 
-
 \begin{algorithm}\label{algo:tree-induction}
 Build a decision tree
 \textnormal{
@@ -523,7 +522,7 @@ Build a decision tree
                    \end{varwidth}
             \State Make $t_p$ an internal node given splitting rule $s$.
             \State Partition $\mathcal{L}_p$ into $\mathcal{L}_r$ and
-                   $\mathcal{L}_l$ given $s^*$.
+                   $\mathcal{L}_l$ given $s^*$. \label{alg-line:partition}
             \State Create two empty nodes $t_r$ and $t_l$ child of $t_p$.
             \State $stack$\Call{.push}{($t_r$, $\mathcal{L}_r$)}
             \State $stack$\Call{.push}{($t_l$, $\mathcal{L}_l$)}
@@ -547,7 +546,7 @@ Search for the best split
                \mathcal{X}_j = \{X_{i,j}, \forall i \in \mathcal{L}\}.
                \] \label{alg-line:value-extract}
         \State Sort $\mathcal{L}$ and $\mathcal{X}_j$ by increasing values
-               of $\mathcal{X}_j$.
+               of $\mathcal{X}_j$.  \label{alg-line:sorting}
         \State Generate all possible splitting rules
                \[
                Q(\mathcal{X}_j)=\{((x_j \leq \nu), (x_j > \nu))| \nu \in \mathcal{X}_j)
@@ -598,104 +597,86 @@ arithmetic and matrix operations. However, row indexing is slow. Note that a
 similar row-based sparse matrix called compressed sparse row format also exists
 and works under similar principles.
 
-\section{Induce decision trees on sparse input data} \label{sec:sparse-input-dt}
+\section{Growth of decision trees on sparse input data} \label{sec:sparse-input-dt}
 
 In order to grow decision trees on sparse input matrix, we have to require a
 sparse matrix format with efficient row indexing as the tree works with subset
 of the samples, and also efficient column indexing as features are randomly
-sampled at each node. Furthermore, we hope to speed up the overall
-algorithm by taking into account the input space sparsity. Compressed sparse
-column matrix already satisfy the fast column indexing requirement. We are
-going to show how to efficiently exploit the data structure  as to have fast
-row indexing and speed up the overall algorithm on sparse data.
+sampled at each node. Furthermore, we hope to speed up the overall algorithm by
+taking into account the input space sparsity. Compressed sparse column matrix
+already satisfies the fast column indexing requirement. We are going to show
+how to efficiently exploit the data structure as to have a fast row indexing
+and use the proposed approach to speed up the overall algorithm on sparse data.
 
 Given the sparse matrix format, the main issue is to efficiently perform the
 extraction of the sample values reaching the node (the line \ref{alg-line:value-extract}
-of Algorithm \ref{algo:find-best-split}). Otherwise said for a
+of Algorithm \ref{algo:find-best-split}). Note that this is the only operation which requires interaction
+with the input matrix data. Otherwise said for a
 given feature $j$, one have to be able to perform the intersection between the
-sample set $\mathcal{L}$ which have reached the node and the $m_j=indptr[j+1] -
-indptr[j]$  non zero elements of the feature $j$ as to generate the set of
-possible splitting rules.  Once this is done, we will be able to speed up the
-split search by treating separately splitting rules with positive and negative
-thresholds. If we assume that the $indices$ of the input csc matrix
+sample set $\mathcal{L}_p$ which have reached the node and the $m_j=indptr[j+1] -
+indptr[j]$  non zero elements of the feature $j$ as to generate a set of
+possible splitting rules. If we assume that the $indices$ of the input csc matrix
 array are sorted per column, then standard intersection
 algorithms have the following time complexity:
 \begin{enumerate}
-\item in $O(|\mathcal{L}| \log{m_j})$ by performing $|\mathcal{L}| $ binary
+\item in $O(|\mathcal{L}_p| \log{m_j})$ by performing $|\mathcal{L}_p| $ binary
 search on the sorted $m_j$ non zero elements;
-\item in $O(|\mathcal{L}|\log{|\mathcal{L}|} + m_j\log{|\mathcal{L}|})$
+\item in $O(|\mathcal{L}_p|\log{|\mathcal{L}_p|} + m_j\log{|\mathcal{L}_p|})$
 by sorting the sample set $\mathcal{L}$ and performing $m_j$ binary search on
-$\mathcal{L}$;
-\item in $O(|\mathcal{L}|\log{|\mathcal{L}|} + m_j + |\mathcal{L}|)$ by sorting the
-sample set $\mathcal{L}$ and retrieving the intersection by iterating over both
+$\mathcal{L}_p$;
+\item in $O(|\mathcal{L}_p|\log{|\mathcal{L}_p|} + m_j + |\mathcal{L}_p|)$ by sorting the
+sample set $\mathcal{L}_p$ and retrieving the intersection by iterating over both
 arrays;
-\item in $O(m_j + |\mathcal{L}|)$ by first creating a temporary hash table from the
+\item in $O(m_j + |\mathcal{L}_p|)$ by first creating a temporary hash table from the
 a first array and then checking if elements of the second array are contained
-in the hashtable.
+in the hash table.
 \end{enumerate}
 
-Nevertheless in the context of a decision tree, it's possible to perform the
-intersection between any column of the csc input sparse matrix and the sample
-set $\mathcal{L}$ faster than the hash table approach.
+In the context of decision tree induction, the intersection operation will be
+repeated for each sampled feature and for various sample sets $\mathcal{L}_p$.
+Taking this into account, it's possible to improve approach (4). The idea is to
+maintain during the tree growth a mapping, represented at Figure
+\ref{fig:mapping}, between the row index, the $indices$ array, of the csc
+matrix and the position of the related samples in the sample set array
+$\mathcal{L}$. Since each sample only belongs to one tree branch, a subset
+$\mathcal{L}_p$ of $\mathcal{L}$ can be conveniently represented by a slice
+$[start, end[$ of the array $\mathcal{L}$. Thus, it's possible to check in
+$O(1)$ if the $k$-th non zero element of the csc matrix belongs to the sample set
+$\mathcal{L}_p$ by checking if $mapping[indices[k]]$ is in $[start, end[$.
+Maintaining the mapping for a given position $p$ is done in $O(1)$ by
+setting $mapping[\mathcal{L}[p]]$ to $p$. Thus we deduce that performing
+the intersection between the $indices$ array and $\mathcal{L}_p$ can be
+done in $O(m_j)$.
 
+\begin{figure}
+  \centering
+   \def\svgwidth{0.4\textwidth}
+   \input{images/mapping.pdf_tex}
+   \caption{The array $mapping$ allow to efficiently know if between the $indices$ array of the csr matrix
+            and a sample set $\mathcal{L}_p$}
+   \label{fig:mapping}
+\end{figure}
 
+With the application of the mapping intersection algorithm, we can speed up the
+sorting operation and splitting rule evaluation of Algorithm~\ref{algo:find-best-split}
+by working separately on positive and negative values. Furthermore, it's also
+possible to partition a
+sample set $\mathcal{L}_p$ into two partition $\mathcal{L}_r$ and
+$\mathcal{L}_r$ (line~ \ref{alg-line:partition} of Algorithm~\ref{algo:tree-induction})
+given a split on feature $j$ in $O(m_j)$ instead of $O(n)$.
 
-Depending on the size of these two sets we can either
-perform a binary search or a \emph{reverse index} search. For the latter end we need an
-additional auxiliary data structure: $index\_to\_samples$ which basically is
-a reverse map of $samples$ to its indices, i.e. $index\_to\_samples[j] = i$
-when $samples[i] = j$.
+In practice, the number of non zero element $m_j$ of features $j$
+could be a lot bigger than the size of a sample set $\mathcal{L}_p$. For instance,
+ this is likely to happen near the leaves nodes whenever tree are fully developed.
+There is only a few   samples reaching those nodes. For optimal performance,
+one can use a hybrid intersection algorithm which combines the previously
+developed mapping approach to approach (1) based on binary search. whenever
+$\mathcal{L}_p \ll m_j$, the binary approach is likely to be faster.
 
-If the size of the current node, i.e. $end - start$, is small then we can sort
-$samples[start:end]$ and for each \emph{index} in $samples[start:end]$ perform a binary
-search in $indices[indptr[f]:indptr[f+1]]$ to find the set of instances of the current node with
-non-zero values of feature $f$. On the other hand if the size of the current
-node is large, sorting the set might be costly; we do a reverse index search
-instead. In reverse index search for each instance $index$ in $indices[indptr[f]:indptr[f+1]]$ if
-$index\_to\_samples[index]$ is not between $start$ and $end$ then that instance
-is not in the current node. So we only keep instances in
-$indices[indptr[f]:indptr[f+1]]$ when their corresponding $index\_to\_samples$
-is between $start$ and $end$.
+In the context of sparse data, one more optimization that could be made is
+to remember which features are constant. During the tree growth, this will
+avoid the overhead of searching for a best split where none exists.
 
-We define the following four variables for the current feature $f$:
-\begin{align}
-n\_indices_f &= indptr[f+1] - indptr[f] \\
-n\_samples &= end - start, \\
-S &= n\_samples  \times \log(n\_samples) \label{S} \\
-B_f &= n\_samples  \times \log(n\_indices_f) \label{B}
-\end{align}
-
-Sorting of $samples[start:end]$ takes time $S$ (equation~\ref{S})
-and binary search of instances of $samples[start:end]$ in
-$indices[indptr[f]:indptr[f+1]]$ takes $B_f$ (equation~\ref{B}).
-
-Note that sorting of $samples[start:end]$ happens only once in a $BestSplit$ call for all
-candidate features, whereas the binary search happens for each candidate feature.
-On the other hand, the reverse index search takes $n\_indices_f$ time. Hence the total time of binary search is:
-$$S + \sum_{f} B_f, $$
-and the total time for the reverse index search is:
-$$\sum_{f} n\_indices_f.$$
-
-Instead of comparing these two numbers and making a decision, we make a decision on each feature $f$.
-We compare the time complexity of the binary search, i.e. $B_f$, to that of a fraction of the reverse index search, i.e. to $c \times n\_indices$.
-Benchmarking with different values of $c$, we came up with the following heuristic: \\
-
-\begin{algorithmic}
-\If{$samples[start:end]$ is sorted}
-	\If{$ B_f < 0.10 \times n\_indices_f $}
-	\State Conduct a binary search
-	\Else
-	\State  Conduct a reverse index search
-	\EndIf
-\Else
-	\If{$ S + B_f < 0.10 \times n\_indices_f $}
-	\State Sort $samples[start:end]$.
-	\State Conduct a  binary search
-	\Else
-	\State  Conduct a reverse index search
-	\EndIf
-\EndIf
-\end{algorithmic}
 
 Finally note that for testing the sparse data is flattened for efficient random memory access.
 
@@ -705,13 +686,7 @@ In the first experiment we trained different decision tree classifiers on the \e
 consists of $20000$ news groups documents distributed across $20$ newsgroups
 almost evenly \cite{joachims1996probabilistic}. For each value of $max\_depth$ we trained two decision tree classifiers: one time with the training data represented in a $csc\_matrix$ sparse matrix and one time with the data represented in a dense matrix. For each of these pairs we verified that the trees are identical and compared their training times. As Figure~\ref{depth} shows, the training time with a densely represented matrix is much higher than its sparsely represented counterpart.
 
-The second experiment was carried out on synthetic data. This time we trained different decision tree classifiers, with $max\_depth = 20$ and keeping the default values for other parameters. We generated random matrices of varying densities
-each of size $100000 \times 1000$. Density is the percentage
-of non-zero values for each feature. For example in a matrix with $density=0.1$ every feature is $10\%$ of the time non-zero. For each density we created $10$ random matrices, and each of these matrices were represented in a sparse $csc\_matrix$ and a dense matrix and decision tree classifiers were fitted on both formats. Figure~\ref{density} shows the average training time for each density with one standard deviation. As the figure shows the training time of sparse matrices is much lower that their dense
-counterparts when the density of the matrix is quite low, i.e. less than $0.2$. On the other hand when the density is high, e.g. $density = 0.5$, the training time with dense matrices
-input is lower than their sparse counterparts. The figure suggests that $csc\_matrix$ should only be used when the data is really sparse, e.g. with textual data.
-
-\begin{figure}
+\begin{figure}[h]
 \centering
 \includegraphics[scale=0.45]{images/depth.pdf}%20_news_groups.png
 \caption{Training Time for Different $max\_depth$ on Sparse vs. Dense Input
@@ -719,8 +694,14 @@ input is lower than their sparse counterparts. The figure suggests that $csc\_ma
 \label{depth}
 \end{figure}
 
+The second experiment was carried out on synthetic data. This time we trained different decision tree classifiers, with $max\_depth = 20$ and keeping the default values for other parameters. We generated random matrices of varying densities
+each of size $100000 \times 1000$. Density is the percentage
+of non-zero values for each feature. For example in a matrix with $density=0.1$ every feature is $10\%$ of the time non-zero. For each density we created $10$ random matrices, and each of these matrices were represented in a sparse $csc\_matrix$ and a dense matrix and decision tree classifiers were fitted on both formats. Figure~\ref{density} shows the average training time for each density with one standard deviation. As the figure shows the training time of sparse matrices is much lower that their dense
+counterparts when the density of the matrix is quite low, i.e. less than $0.2$. On the other hand when the density is high, e.g. $density = 0.5$, the training time with dense matrices
+input is lower than their sparse counterparts. The figure suggests that $csc\_matrix$ should only be used when the data is really sparse, e.g. with textual data.
 
-\begin{figure}
+
+\begin{figure}[h]
 \centering
 \includegraphics[scale=0.45]{images/density.pdf}
 \caption{Training Time of Random Matrices with $n\_samples = 100000$, $n\_features = 1000$ and Different Densities on Sparse vs. Dense Input}
