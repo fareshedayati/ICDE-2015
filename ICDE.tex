@@ -433,18 +433,18 @@ of \emph{scikit-learn}, the most popular open source Python machine learning lib
 High dimensional supervised learning problems such as text or image annotation are common in many research and practical problems. Such problems require defining a mapping between the raw input space and a target vector space, where each dimension is called a feature to some categorical or numerical output variable.
  A sample is a input-output pair. While those datasets have very high dimensional input space,
 they are often sparsely representable. For instance, the number of unique words
-associated to a text document is actually small compared to the all words of a
+associated to a text document is actually small compared to the number of words of a
 given language. In order to work efficiently with such data, efficient matrix
-formats have been developed with fast operations, such as dot product, and a
+formats have been developed with fast operations, such as dot product, and
 low memory footprints.
 
 Tree-based ensemble models, such as adaboost \cite{freund1995desicion}, random
 forest \cite{breiman2001random} or gradient tree boosting
 \cite{friedman2001greedy}, are some of the most robust and widely-used
-supervised machine learning. All these methods have in common that they use
+supervised machine learning. What all these methods have in common is that they use
 randomized decision trees as a base learner. This building block is a
 hierarchical model which divide the input space through a series of binary
-splitting rules which partition the input space . Predictions of a decision tree is obtained by
+splitting rules which partition the input space. Predictions of a decision tree is obtained by
 following the tree structure until reaching a leaf. In the ensemble framework, those models are either averaged
 \cite{breiman2001random} or learnt sequentially \cite{freund1995desicion},
 \cite{friedman2001greedy}.
@@ -463,7 +463,7 @@ In this paper, we present an efficient splitting procedure tailored for
 numerical sparse input data in compressed sparse column format, a sparse matrix
 format. For a given subset of samples, we are able to efficiently extract non
 zero values for a given feature of this subset of samples. Knowing which
-elements are non zeros allows large speed up. It decreases sorting time of
+elements are nonzero allows large speedup. It decreases sorting time of
 samples in the current node along features which is an essential component in
 all tree-based models. Moreover it reduces the set of possible splits to
 evaluate at each node. We also want to highlight that the contribution of this
@@ -505,7 +505,7 @@ samples. The recursive induction of the decision decision is described
 by Algorithm~\ref{algo:tree-induction} and the search for the best split
 is described by Algorithm~\ref{algo:find-best-split}. Note that sorting samples (Line~\ref{alg-line:sorting}) in a node along different features is at the core of Algorithm~\ref{algo:find-best-split}; it speeds up computation of the impurity measure for all possible splitting thresholds in an incremental manner. 
 
-In the context of ensemble, tree are further randomized by searching for the
+In the context of ensemble, trees are further randomized by searching for the
 best split among $k$ features at each node and also might be induced on a
 bootstrap copy of the samples. The tree can be grown alternatively in a best-first
 search manner by replacing the stack of Algorithm~\ref{algo:tree-induction}
@@ -586,8 +586,8 @@ Search for the best split
 For memory efficiency and taking advantage of sparsity we use a data structure
 called compressed sparse column (csc) matrix format. It is a general format to
 represent compactly sparse matrices using three arrays: a $data$ array stores
-the value of each non zero elements, an $indices$ array stores the row index
-of each non zero elements and an $indptr$ array which stores the beginning and
+the value of each nonzero elements, an $indices$ array stores the row index
+of each nonzero elements and an $indptr$ array which stores the beginning and
 end of each columns in the $data$ and the $indices$ arrays.
 
 For instance, this $3 \times 5$ matrix
@@ -626,13 +626,13 @@ extraction of the sample values reaching the node (the line \ref{alg-line:value-
 of Algorithm \ref{algo:find-best-split}). Note that this is the only operation which requires interaction
 with the input matrix data. Otherwise said for a given feature $j$, one have to be able to perform the intersection between the
 sample set $\mathcal{L}_p$ which have reached the node and the $m_j=indptr[j+1] -
-indptr[j]$ non zero elements of the feature $j$ as to generate a set of
+indptr[j]$ nonzero elements of the feature $j$ as to generate a set of
 possible splitting rules. If we assume that the $indices$ of the input csc matrix
 array are sorted per column, then standard intersection
 algorithms have the following time complexity:
 \begin{enumerate}
 \item in $O(|\mathcal{L}_p| \log{m_j})$ by performing $|\mathcal{L}_p| $ binary
-search on the sorted $m_j$ non zero elements;
+search on the sorted $m_j$ nonzero elements;
 \item in $O(|\mathcal{L}_p|\log{|\mathcal{L}_p|} + m_j\log{|\mathcal{L}_p|})$
 by sorting the sample set $\mathcal{L}_p$ and performing $m_j$ binary search on
 $\mathcal{L}_p$;
@@ -653,7 +653,7 @@ matrix and the position of the related samples in the sample set array
 $\mathcal{L}$. Since each sample only belongs to one tree branch, a subset
 $\mathcal{L}_p$ of $\mathcal{L}$ can be conveniently represented by a slice
 $[start, end[$ of the array $\mathcal{L}$. Thus, it's possible to check in
-$O(1)$ if the $k$-th non zero element of the csc matrix belongs to the sample set
+$O(1)$ if the $k$-th nonzero element of the csc matrix belongs to the sample set
 $\mathcal{L}_p$ by checking if $mapping[indices[k]]$ is in $[start, end[$.
 Maintaining the mapping for a given position $p$ is done in $O(1)$ by
 setting $mapping[\mathcal{L}[p]]$ to $p$. Thus we deduce that performing
@@ -678,7 +678,7 @@ sample set $\mathcal{L}_p$ into two partition $\mathcal{L}_r$ and
 $\mathcal{L}_r$ (line~ \ref{alg-line:partition} of Algorithm~\ref{algo:tree-induction})
 given a split on feature $j$ in $O(m_j)$ instead of $O(n)$.
 
-In practice, the number of non zero elements $m_j$ of feature $j$ could be a
+In practice, the number of nonzero elements $m_j$ of feature $j$ could be a
 lot bigger than the size of a sample set $\mathcal{L}_p$. This is likely to
 happen near the leaf nodes. Whenever the tree is fully developed, there are
 only a few   samples reaching those nodes. For optimal performance, one can use
@@ -722,13 +722,13 @@ performance.
 
 As a second experiment, we generated random binary classification tasks with
 $n=100000$ samples and $m=1000$ features. The input matrices are sparse random
-matrices whose non zeros element are drawn uniformly in $[0, 1)$. Their density
+matrices whose nonzero elements are drawn uniformly in $[0, 1)$. Their density
 are ranging from $0.01$ to $0.5$. Each point is averaged over 20 experiments
 and the maximal depth of the decision tree is restricted to 20. As illustrated
 on Figure \ref{fig:density}, the sparsity aware decision tree induction
 algorithm exploits the sparsity structure to be trained faster than its dense
 counterpart. However whenever the input space density is over $0.2$, the
-extraction of the non zero values in the sparse csc matrix becomes expensive.
+extraction of the nonzero values in the sparse csc matrix becomes expensive.
 This suggests that the sparse decision tree induction algorithm is particularly
 suited for sparsely representable data such as text documents.
 
