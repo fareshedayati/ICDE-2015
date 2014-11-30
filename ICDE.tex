@@ -694,33 +694,145 @@ split where none exists for those features.
 Finally note that for testing the sparse data is flattened for efficient random
 memory access.
 
+
+%
+%
+%if ((1 - is_samples_sorted[0]) * n_samples * log(n_samples) +
+%                n_samples * log(n_indices) < EXTRACT_NNZ_SWITCH * n_indices):
+%            extract_nnz_binary_search(self.X_indices, self.X_data,
+%                                      indptr_start, indptr_end,
+%                                      self.samples, self.start, self.end,
+%                                      self.index_to_samples,
+%                                      self.feature_values,
+%                                      end_negative, start_positive,
+%                                      self.sorted_samples, is_samples_sorted)
+%
+%        # Using an index to samples  technique to extract non zero values
+%        # index_to_samples is a mapping from X_indices to samples
+%        else:
+%            extract_nnz_index_to_samples(self.X_indices, self.X_data,
+%                                         indptr_start, indptr_end,
+%                                         self.samples, self.start, self.end,
+%                                         self.index_to_samples,
+%                                         self.feature_values,
+%                                         end_negative, start_positive)
+%
+
+\begin{algorithm}\label{algo:find-best-split}
+Search for the best split
+\textnormal{
+\begin{algorithmic}[1]
+\Function{FindBestSplit}{$\mathcal{L}_p$, $X$, $Y$}
+    \State $\text{best} = -\infty$
+    \For{$j \in \{0, \ldots, m-1\}$}
+        \State Extract feature values reaching the node
+               \[
+               \mathcal{F}_j = \{X_{i,j}, \forall i \in \mathcal{L}_p\}.
+               \] \label{alg-line:value-extract}
+        \State Sort $\mathcal{L}_p$ and $\mathcal{F}_j$ by increasing values
+               of $\mathcal{F}_j$.  \label{alg-line:sorting}
+        \State Generate all possible splitting rules
+               \[
+               Q(\mathcal{F}_j)=\{((x_j \leq \nu), (x_j > \nu))| \nu \in \mathcal{F}_j)
+               \]
+        \For{$s$ in $Q(\mathcal{F}_j)$}
+            \State Evaluate impurity reduction of splitting rule $s$
+                   \[
+                   \text{score} = \Delta{}I(s, \mathcal{L}_p).
+                   \]
+            \If{$\text{score} > \text{best}$}
+                \State $\text{best} =\text{score}$
+                \State $s^* = s$
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \Return $s^*$
+\EndFunction
+\end{algorithmic}
+}
+\end{algorithm}
+
 \section{Experiments} \label{sec:experiments}
 
-We will first assess the computational performance of the decision tree algorithm on
-the \emph{20 Newsgroups} \cite{joachims1996probabilistic} dataset which
-consists in $n=11314$ document on 20 topics. Each text document was
-transformed into sparse tf-idf vectors of size $m=130107$ with a density of
-$0.001$. We will compare the learning time between the decision tree learnt
+We will assess the computational performance of the decision tree algorithm on datasets dominantly composed of categorical or textual features, which makes them very sparse, and on datasets that are more dense. We will compare the learning time between the decision tree learnt
 using a sparse csc matrix and a dense array.
-
+The first two experiments are on very sparse datasets, namely on the \emph{20 Newsgroups} dataset \cite{joachims1996probabilistic} and on the \emph{KDD cup 1999} dataset\cite{joachims1996probabilistic}. The \emph{20 Newsgroups} dataset
+consists of $n=11314$ document on $20$ topics. Each text document was
+transformed into sparse tf-idf vectors of size $m=130107$ with a density of
+$0.001$. 
 In tree-based ensemble methods, decision trees are either shallow tree as used
 in boosting methods or deep tree as random forest ensemble methods. The Figure
-\ref{fig:depth} shows that properly taking into account the sparsity of the
-input space allows to speed up the learning from 14 times for a fully grown
-tree up to 29 times for a decision stump. Furthermore, both algorithm leads
+\ref{fig:20news} shows that properly taking into account the sparsity of the
+input space allows to speed up the learning from 58 times for a fully grown
+tree up to 188 times for a decision stump. Furthermore, both algorithm leads
 exactly to the same decision tree structure and have the same generalization
+performance. The next dataset with low density is the \emph{KDD cup 1999} dataset which consists of $n=96367$ instances. The dataset contains both numerical and categorical data. The feature size of the dataset with categorical features transformed to binary features is $m=20025$ with an average density of
+$0.014$. Unlike the previous dataset the task for this dataset is regression. We will compare the learning time between the decision tree regressor learnt
+using a sparse csc matrix and a dense array. As Figure \ref{fig:cup} shows taking into account the sparsity of the
+input space allows to speed up the learning by a factor between 800 and 900 times. Furthermore, both algorithm leads
+exactly to the same decision tree regressor structure and have the same generalization
 performance.
+
+Our dense datasets are the \emph{Adult} dataset\cite{joachims1996probabilistic} with a density of $0.12$, $n=32561$ instances and  $m=145$ features, and the \emph{TIC} dataset\cite{joachims1996probabilistic} with a density of $0.44$ and $n=4000$ instances and $m=85$ features. As Figure \ref{fig:adult} shows for shallower trees sparse threes are approximately learnt twice faster than their dense counterparts, but for fully grown threes it is the opposite. Finally as Figure \ref{fig:tic} shows designs threes are learnt faster by dense input data rather than by input data sparsely represented. 
+
+
+
+%\begin{figure}[h]
+%\centering
+%\includegraphics[scale=0.45]{images/depth.pdf}
+%\caption{Leveraging the input sparsity significantly speed up decisions
+%         tree induction both with shallow and deep trees on the \emph{20 Newsgroups}
+%         dataset.}
+%\label{fig:depth}
+%\end{figure}
+
+
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.45]{images/depth.pdf}
+\includegraphics[scale=0.45]{images/20news.pdf}
 \caption{Leveraging the input sparsity significantly speed up decisions
          tree induction both with shallow and deep trees on the \emph{20 Newsgroups}
          dataset.}
-\label{fig:depth}
+\label{fig:20news}
 \end{figure}
 
-As a second experiment, we generated random binary classification tasks with
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.45]{images/cup.pdf}
+\caption{Leveraging the input sparsity significantly speed up decisions
+         tree induction both with shallow and deep trees on the \emph{cup}
+         dataset.}
+\label{fig:cup}
+\end{figure}
+
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.45]{images/adult.pdf}
+\caption{Leveraging the input sparsity significantly speed up decisions
+         tree induction both with shallow and deep trees on the \emph{adult}
+         dataset.}
+\label{fig:adult}
+\end{figure}
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.45]{images/tic.pdf}
+\caption{Leveraging the input sparsity significantly speed up decisions
+         tree induction both with shallow and deep trees on the \emph{tic}
+         dataset.}
+\label{fig:tic}
+\end{figure}
+
+
+
+
+
+
+As a another experiment, we generated random binary classification tasks with
 $n=100000$ samples and $m=1000$ features. The input matrices are sparse random
 matrices whose nonzero elements are drawn uniformly in $[0, 1)$. Their density
 are ranging from $0.01$ to $0.5$. Each point is averaged over 20 experiments
