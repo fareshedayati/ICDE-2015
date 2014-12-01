@@ -675,7 +675,7 @@ by working separately on positive and negative values. Furthermore, it's also
 possible to partition a
 sample set $\mathcal{L}_p$ into two partition $\mathcal{L}_r$ and
 $\mathcal{L}_r$ (line~ \ref{alg-line:partition} of Algorithm~\ref{algo:tree-induction})
-given a split on feature $j$ in $O(m_j)$ instead of $O(n)$. For more details of this algorithm refer to Algorithm~\ref{algo:extract_nnz_mapping}. 
+given a split on feature $j$ in $O(m_j)$ instead of $O(n)$. For more details of this algorithm refer to Algorithm \ref{map}. 
 
 In practice, the number of nonzero elements $m_j$ of feature $j$ could be a
 lot bigger than the size of a sample set $\mathcal{L}_p$. This is likely to
@@ -683,14 +683,14 @@ happen near the leaf nodes. Whenever the tree is fully developed, there are
 only a few   samples reaching those nodes. For optimal performance, one can use
 a hybrid intersection approach which combines the previously developed mapping
 intersection to approach (1) based on binary search. whenever $\mathcal{L}_p \ll
-m_j$, the binary approach will be faster. For more details of this algorithm refer to Algorithm~\ref{algo:extract_nnz_bsearch}. 
+m_j$, the binary approach will be faster. For more details of this algorithm refer to Algorithm \ref{bsearch}. 
 
-The hybrid algorithm switches between Algorithms ~\ref{algo:extract_nnz_mapping} and ~\ref{algo:extract_nnz_bsearch} by the following rule:
+The hybrid algorithm switches between \ref{bsearch} and \ref{map} by the following rule:
  \begin{equation}
  \label{switch}
  (1- sorted) \times |\mathcal{L}_p| \times \log(|\mathcal{L}_p|) + |\mathcal{L}_p| \times \log(m_j) < 0.1 m_j
  \end{equation}
-where $sorted$ is $1$ if $\mathcal{L}_p$ is sorted and $0$ otherwise.  Algorithm~\ref{algo:extract_nnz_bsearch} is used whenever Equation~\ref{switch} is true and Algorithm~\ref{algo:extract_nnz_mapping} is used otherwise. 
+where $sorted$ is $1$ if $\mathcal{L}_p$ is sorted and $0$ otherwise. Algorithm~\ref{map} is used whenever Equation~\ref{switch} is true and Algorithm~ \ref{bsearch} is used otherwise. 
 
 During the tree growth, one could remember which features are constant for a
 subset of the samples $\mathcal{L}_p$ and a given node $t_p$. For all
@@ -742,8 +742,9 @@ memory access.
 %}
 %\end{algorithm}
 
-\begin{algorithm}\label{algo:extract_nnz_mapping}
-Extract nonzero values of the current node via $mapping$, and partition the positive and negative values.  
+\begin{algorithm}\label{map}
+Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, via $mapping$, and return the positive and negative values separately. Note that at end the samples with negative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
+
 %\textnormal{
 \begin{algorithmic}[1]
 \Function{extract\_nnz\_mapping}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$}
@@ -780,16 +781,13 @@ Extract nonzero values of the current node via $mapping$, and partition the posi
          \If{$start\,\, \leq mapping[index] \,\, < \,\, end$}
          \State $h$ = $mapping[index]$
             	\If {$value > 0$}
-		\State $positives.append(value)$
-		\State \Call{Swap}{$\mathcal{L}$,  $j$, $start_p$}
-		\State $mapping[\mathcal{L}[h]] = h$
-		\State $mapping[\mathcal{L}[start_n]] = start_p$
+	
+		\State $positives$.\Call{append}{$value$}
+		\State \Call{Swap}{$\mathcal{L}$,  $j$, $start_p$, $mapping$}
 	         \Else
-	         \State $negative.append(value)$
-	         \State \Call{Swap}{$\mathcal{L}$,  $j$,$end_n$}
-		\State $mapping[\mathcal{L}[h]] = h$
-		\State $mapping[\mathcal{L}[end_n]] = end_n$
-	        \State $end\_n \,\, += 1$
+		\State $negative$.\Call{append}{$value$}
+	         \State \Call{Swap}{$\mathcal{L}$,  $j$, $end_n$, $mapping$}
+	        \State $end_n \,\, += 1$
 	        \EndIf
          \EndIf
      \EndFor
@@ -798,10 +796,8 @@ Extract nonzero values of the current node via $mapping$, and partition the posi
 \end{algorithmic}
 %}
 \end{algorithm}
-
-
-\begin{algorithm}\label{algo:extract_nnz_bsearch}
-Extract nonzero values of the current node by a binary search, and partition the positive and negative values. 
+\begin{algorithm}\label{bsearch}
+Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, by a binary search, and return the positive and negative values separately. Note that at end the samples with negative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
 %\textnormal{
 \begin{algorithmic}[1]
 \Function{extract\_nnz\_bsearch}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$, $sorted$}
@@ -817,20 +813,18 @@ Extract nonzero values of the current node by a binary search, and partition the
     \EndIf 
      \For{$h \in [start:end]$}
 	   \State $index$ = $\mathcal{L}[h]$
-     	   \State $i$ = \Call{BinarySearch}{$index$, $indices_j$}\\
-	   \Comment{\#Returns the position of $index$ in  $indices_j$, -1 if not found.}
+     	   \State $i$ = \Call{BinarySearch}{$index$, $indices_j$}
+	   \State \# Returns the position of $index$ in  $indices_j$, 
+	   \State \# and -1 if it is not found.
 	   \If {$i \neq -1$ }
 	   	 \If{$data_j[i]  > 0$}
-		\State $positives.append(value)$
-		\State \Call{Swap}{$\mathcal{L}$,  $h$, $start_p$}
-		\State $mapping[\mathcal{L}[j]] = h$
-		\State $mapping[\mathcal{L}[start_n]] = start_p$
+		 \State $end_p \,\, -= 1$
+		\State $positives$.\Call{append}{$value$}
+		\State \Call{Swap}{$\mathcal{L}$,  $h$, $start_p$, $mapping$}
 	         \Else
-	         \State $negative.append(value)$
-	         \State \Call{Swap}{$\mathcal{L}$,  $j$,$end_n$}
-		\State $mapping[\mathcal{L}[h]] = h$
-		\State $mapping[\mathcal{L}[end_n]] = end_n$
-	        \State $end\_n \,\, += 1$
+		\State $negative$.\Call{append}{$value$}
+	         \State \Call{Swap}{$\mathcal{L}$,  $h$, $end_n$, $mapping$}
+	        \State $end_n \,\, += 1$
 	        \EndIf
         		\EndIf
         \EndFor
@@ -838,7 +832,16 @@ Extract nonzero values of the current node by a binary search, and partition the
 \EndFunction
 \end{algorithmic}
 %}
+\begin{algorithmic}[1]
+\Function{Swap}{$\mathcal{L}$, $pos_1$, $pos_2$, $mapping$}
+\State $\mathcal{L}[pos_1]$, $\mathcal{L}[pos_2]$ = $\mathcal{L}[pos_2]$, $\mathcal{L}[pos_1]$
+\State $mapping[\mathcal{L}[pos_1]] = pos_1$
+\State $mapping[\mathcal{L}[pos_2]] = pos_2$
+\EndFunction
+\end{algorithmic}
+%}
 \end{algorithm}
+
 
 
 
