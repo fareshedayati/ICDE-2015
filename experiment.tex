@@ -1,4 +1,12 @@
 \section{Experiments} \label{sec:experiments}
+\subsection{Density and Measurement}
+
+The density of a dataset is its percentage of nonzero values. As we will see below, the less dense the 
+
+We will compare the learning time between the decision tree learnt
+using a sparse csc matrix and a dense array.
+
+\subsection{Read Data}
 
 We will assess the computational performance of the decision tree algorithm on datasets dominantly composed of categorical or textual features, which makes them very sparse, and on datasets that are more dense. We will compare the learning time between the decision tree learnt
 using a sparse csc matrix and a dense array.
@@ -15,11 +23,27 @@ exactly to the same decision tree structure and have the same generalization
 performance. The next dataset with low density is the \emph{KDD cup 1999} dataset which consists of $n=96367$ instances. The dataset contains both numerical and categorical data. The feature size of the dataset with categorical features transformed to binary features is $m=20025$ with an average density of
 $0.014$. Unlike the previous dataset the task for this dataset is regression. We will compare the learning time between the decision tree regressor learnt
 using a sparse csc matrix and a dense array. As Figure \ref{fig:cup} shows taking into account the sparsity of the
-input space allows to speed up the learning by a factor between 800 and 900 times. Furthermore, both algorithm leads
+input space allows to speed up the learning by a factor between 800 and 900 times. Furthermore, both algorithm lead
 exactly to the same decision tree regressor structure and have the same generalization
 performance.
 
 Our dense datasets are the \emph{Adult} dataset\cite{Bache+Lichman:2013} with a density of $0.12$, $n=32561$ instances and  $m=145$ features, and the \emph{TIC} dataset\cite{Bache+Lichman:2013} with a density of $0.44$ and $n=4000$ instances and $m=85$ features. As Figure \ref{fig:adult} shows for shallower trees sparse threes are approximately learnt twice faster than their dense counterparts, but for fully grown threes it is the opposite. Finally as Figure \ref{fig:tic} shows decison threes are learnt faster by dense input data rather than by input data sparsely represented. 
+
+
+\subsection{Synthetic Data}
+
+
+As a another experiment, we generated random binary classification tasks with
+$n=100000$ samples and $m=1000$ features. The input matrices are sparse random
+matrices whose nonzero elements are drawn uniformly in $[0, 1)$. Their density
+are ranging from $0.01$ to $0.5$. Each point is averaged over 20 experiments
+and the maximal depth of the decision tree is restricted to 20. As illustrated
+on Figure \ref{fig:density}, the sparsity aware decision tree induction
+algorithm exploits the sparsity structure to be trained faster than its dense
+counterpart. However whenever the input space density is over $0.2$, the
+extraction of the nonzero values in the sparse csc matrix becomes expensive.
+This suggests that the sparse decision tree induction algorithm is particularly
+suited for sparsely representable data such as text documents.
 
 
 
@@ -74,19 +98,6 @@ Our dense datasets are the \emph{Adult} dataset\cite{Bache+Lichman:2013} with a 
 
 
 
-
-
-As a another experiment, we generated random binary classification tasks with
-$n=100000$ samples and $m=1000$ features. The input matrices are sparse random
-matrices whose nonzero elements are drawn uniformly in $[0, 1)$. Their density
-are ranging from $0.01$ to $0.5$. Each point is averaged over 20 experiments
-and the maximal depth of the decision tree is restricted to 20. As illustrated
-on Figure \ref{fig:density}, the sparsity aware decision tree induction
-algorithm exploits the sparsity structure to be trained faster than its dense
-counterpart. However whenever the input space density is over $0.2$, the
-extraction of the nonzero values in the sparse csc matrix becomes expensive.
-This suggests that the sparse decision tree induction algorithm is particularly
-suited for sparsely representable data such as text documents.
 
 \begin{figure}[h]
 \centering
