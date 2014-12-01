@@ -396,7 +396,7 @@ efficient splitting algorithm to leverage input sparsity within decision tree
 methods. %We exploit the a-priori knowledge that each column has very few non-
 %zero elements and show how learning time is significantly decreased.
 Our algorithm improves training time over sparse datasets by more than
-one order of magnitude and it will be incorporated in the next version
+two orders of magnitude and it will be incorporated in the next version
 of \emph{scikit-learn}, the most popular open source Python machine learning library.
 
 %Many machine learning tasks such as text annotation involve sparsely
@@ -467,7 +467,7 @@ elements are nonzero allows large speedup. It decreases sorting time of
 samples in the current node along features which is an essential component in
 all tree-based models. Moreover it reduces the set of possible splits to
 evaluate at each node. We also want to highlight that the contribution of this
-paper have been proposed for inclusion to the  \emph{scikit-learn}
+paper have been proposed for and merged in the  \emph{scikit-learn}
 \cite{buitinck2013api,pedregosa2011scikit} open source package. This will
 benefit the machine learning community.
 
@@ -642,10 +642,9 @@ arrays;
 \item in $O(m_j + |\mathcal{L}_p|)$ by first creating a temporary hash table from the
 one array and then checking if elements of the other array are contained
 in the hash table.
-\end{enumerate}
+\end{enumerate} 
 
-In the context of decision tree induction, the intersection operation will be
-repeated for each sampled feature and for various sample sets $\mathcal{L}_p$.
+As explained below, we will be using a hybrid solution composed of a variation of approach (4) and approach (1).  In the context of decision tree induction, the intersection operation will be repeated for each sampled feature and for various sample sets $\mathcal{L}_p$.
 Taking this into account, it's possible to improve approach (4). The idea is to
 maintain during the tree growth a mapping, represented at Figure
 \ref{fig:mapping}, between the row index, the $indices$ array, of the csc
@@ -655,8 +654,8 @@ $\mathcal{L}_p$ of $\mathcal{L}$ can be conveniently represented by a slice
 $[start, end[$ of the array $\mathcal{L}$. Thus, it's possible to check in
 $O(1)$ if the $k$-th nonzero element of the csc matrix belongs to the sample set
 $\mathcal{L}_p$ by checking if $mapping[indices[k]]$ is in $[start, end[$.
-Maintaining the mapping for a given position $p$ is done in $O(1)$ by
-setting $mapping[\mathcal{L}[p]]$ to $p$. Thus we deduce that performing
+Maintaining the mapping for a given position $pos$ is done in $O(1)$ by
+setting $mapping[\mathcal{L}[pos]]$ to $pos$. Thus we deduce that performing
 the intersection between the $indices$ array and $\mathcal{L}_p$ can be
 done in $O(m_j)$.
 
@@ -676,7 +675,7 @@ by working separately on positive and negative values. Furthermore, it's also
 possible to partition a
 sample set $\mathcal{L}_p$ into two partition $\mathcal{L}_r$ and
 $\mathcal{L}_r$ (line~ \ref{alg-line:partition} of Algorithm~\ref{algo:tree-induction})
-given a split on feature $j$ in $O(m_j)$ instead of $O(n)$.
+given a split on feature $j$ in $O(m_j)$ instead of $O(n)$. For more details of this algorithm refer to Algorithm~\ref{algo:extract_nnz_mapping}. 
 
 In practice, the number of nonzero elements $m_j$ of feature $j$ could be a
 lot bigger than the size of a sample set $\mathcal{L}_p$. This is likely to
@@ -684,12 +683,19 @@ happen near the leaf nodes. Whenever the tree is fully developed, there are
 only a few   samples reaching those nodes. For optimal performance, one can use
 a hybrid intersection approach which combines the previously developed mapping
 intersection to approach (1) based on binary search. whenever $\mathcal{L}_p \ll
-m_j$, the binary approach will be faster.
+m_j$, the binary approach will be faster. For more details of this algorithm refer to Algorithm~\ref{algo:extract_nnz_bsearch}. 
+
+The hybrid algorithm switches between Algorithms ~\ref{algo:extract_nnz_mapping} and ~\ref{algo:extract_nnz_bsearch} by the following rule:
+ \begin{equation}
+ \label{switch}
+ (1- sorted) \times |\mathcal{L}_p| \times \log(|\mathcal{L}_p|) + |\mathcal{L}_p| \times \log(m_j) < 0.1 m_j
+ \end{equation}
+where $sorted$ is $1$ if $\mathcal{L}_p$ is sorted and $0$ otherwise.  Algorithm~\ref{algo:extract_nnz_bsearch} is used whenever Equation~\ref{switch} is true and Algorithm~\ref{algo:extract_nnz_mapping} is used otherwise. 
 
 During the tree growth, one could remember which features are constant for a
 subset of the samples $\mathcal{L}_p$ and a given node $t_p$. For all
 descendant of node $t_p$, this will avoid the overhead of searching for a
-split where none exists for those features.
+split where none exists for those features. 
 
 Finally note that for testing the sparse data is flattened for efficient random
 memory access.
@@ -718,45 +724,129 @@ memory access.
 %                                         end_negative, start_positive)
 %
 
-\begin{algorithm}\label{algo:find-best-split}
-Search for the best split
-\textnormal{
+%\begin{algorithm}\label{algo:extract_non_zero}
+%Extract nonzero values of the current node, and partition the positive and negative values. 
+%\textnormal{
+%\begin{algorithmic}[1]
+%\Function{ExtractNnz}{$\mathcal{L}_p$, $incides$, $indptr$, $mapping$, $j$, $start$, $end$, $samples\_sorted$}
+%    \State $m_j=indptr[j+1] - indptr[j]$
+%    \State $n\_sampels=|\mathcal{L}_p|$
+%    \State $R_j = (1- samples\_sorted) \times n\_samples \times \log(n\_samples) + n\_samples \times \log(m_j)$
+%    \If{$ R_j < 0.1 \times m_j$}
+%	    \State \Call{extract\_nnz\_binary\_search()}
+%    \Else 
+%	    \State \Call{extract\_nnz\_mapping()}
+%     \EndIf
+%\EndFunction
+%\end{algorithmic}
+%}
+%\end{algorithm}
+
+\begin{algorithm}\label{algo:extract_nnz_mapping}
+Extract nonzero values of the current node via $mapping$, and partition the positive and negative values.  
+%\textnormal{
 \begin{algorithmic}[1]
-\Function{FindBestSplit}{$\mathcal{L}_p$, $X$, $Y$}
-    \State $\text{best} = -\infty$
-    \For{$j \in \{0, \ldots, m-1\}$}
-        \State Extract feature values reaching the node
-               \[
-               \mathcal{F}_j = \{X_{i,j}, \forall i \in \mathcal{L}_p\}.
-               \] \label{alg-line:value-extract}
-        \State Sort $\mathcal{L}_p$ and $\mathcal{F}_j$ by increasing values
-               of $\mathcal{F}_j$.  \label{alg-line:sorting}
-        \State Generate all possible splitting rules
-               \[
-               Q(\mathcal{F}_j)=\{((x_j \leq \nu), (x_j > \nu))| \nu \in \mathcal{F}_j)
-               \]
-        \For{$s$ in $Q(\mathcal{F}_j)$}
-            \State Evaluate impurity reduction of splitting rule $s$
-                   \[
-                   \text{score} = \Delta{}I(s, \mathcal{L}_p).
-                   \]
-            \If{$\text{score} > \text{best}$}
-                \State $\text{best} =\text{score}$
-                \State $s^* = s$
-            \EndIf
-        \EndFor
-    \EndFor
-    \State \Return $s^*$
+\Function{extract\_nnz\_mapping}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$}
+   \State {$positives$ = [ ]}
+    \State {$negatives$ = [ ]}
+    \State {$incides$ = X.indices}
+    \State {$indptr$ = X.indptr}
+    \State {$data$ = X.data}
+    
+%    \State $end_n$ = start (end of negatives)
+%    \State $start_p$ = end (start of positives)
+
+%    \For{$k \in [indptr[j] \mbox{:} indptr[j+1]]$}
+%    	\State $index = indices[k]$
+%        \State $value = data[k]$
+%         \If{$start\,\, \leq mapping[index] \,\, < \,\, end$}
+%            	\If {$value > 0$}
+%		\State $start_p \,\, -= 1$
+%		\State \Call{Swap}{$\mathcal{L}$,  $k$, $start_p$}
+%		\State $mapping[\mathcal{L}[k]] = k$
+%		\State $mapping[\mathcal{L}[start_n]] = start_p$
+%	         \Else
+%	         \State \Call{Swap}{$\mathcal{L}$,  $k$,$end_n$}
+%		\State $mapping[\mathcal{L}[k]] = k$
+%		\State $mapping[\mathcal{L}[end_n]] = end_n$
+%	        \State $end\_n \,\, += 1$
+%	        \EndIf
+%         \EndIf
+%     \EndFor
+
+    \For{$k \in [indptr[j] \mbox{:} indptr[j+1]]$}
+    	\State $index = indices[k]$
+        \State $value = data[k]$
+         \If{$start\,\, \leq mapping[index] \,\, < \,\, end$}
+         \State $h$ = $mapping[index]$
+            	\If {$value > 0$}
+		\State $positives.append(value)$
+		\State \Call{Swap}{$\mathcal{L}$,  $j$, $start_p$}
+		\State $mapping[\mathcal{L}[h]] = h$
+		\State $mapping[\mathcal{L}[start_n]] = start_p$
+	         \Else
+	         \State $negative.append(value)$
+	         \State \Call{Swap}{$\mathcal{L}$,  $j$,$end_n$}
+		\State $mapping[\mathcal{L}[h]] = h$
+		\State $mapping[\mathcal{L}[end_n]] = end_n$
+	        \State $end\_n \,\, += 1$
+	        \EndIf
+         \EndIf
+     \EndFor
+        \State \Return {$(start, end_n), (start_p, end), positives, negatives$}
 \EndFunction
 \end{algorithmic}
-}
+%}
 \end{algorithm}
+
+
+\begin{algorithm}\label{algo:extract_nnz_bsearch}
+Extract nonzero values of the current node by a binary search, and partition the positive and negative values. 
+%\textnormal{
+\begin{algorithmic}[1]
+\Function{extract\_nnz\_bsearch}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$, $sorted$}
+    \State $positives$ = [ ]  
+    \State $negatives$ = [ ] 
+    \State $incides$ = X.indices
+    \State $indptr$ = X.indptr
+    \State $data$ = X.data
+    \State $indices_j = indices[indptr[j]:indptr[j+1]]$
+    \State $data_j= data[indptr[j]:indptr[j+1]]$
+     \If{$sorted=False$}
+    \State $\mathcal{L}$ = \Call{sort}{$\mathcal{L}$, start, end}
+    \EndIf 
+     \For{$h \in [start:end]$}
+	   \State $index$ = $\mathcal{L}[h]$
+     	   \State $i$ = \Call{BinarySearch}{$index$, $indices_j$}\\
+	   \Comment{\#Returns the position of $index$ in  $indices_j$, -1 if not found.}
+	   \If {$i \neq -1$ }
+	   	 \If{$data_j[i]  > 0$}
+		\State $positives.append(value)$
+		\State \Call{Swap}{$\mathcal{L}$,  $h$, $start_p$}
+		\State $mapping[\mathcal{L}[j]] = h$
+		\State $mapping[\mathcal{L}[start_n]] = start_p$
+	         \Else
+	         \State $negative.append(value)$
+	         \State \Call{Swap}{$\mathcal{L}$,  $j$,$end_n$}
+		\State $mapping[\mathcal{L}[h]] = h$
+		\State $mapping[\mathcal{L}[end_n]] = end_n$
+	        \State $end\_n \,\, += 1$
+	        \EndIf
+        		\EndIf
+        \EndFor
+        \State \Return {$(start, end_n), (start_p, end), positives, negatives$}
+\EndFunction
+\end{algorithmic}
+%}
+\end{algorithm}
+
+
 
 \section{Experiments} \label{sec:experiments}
 
 We will assess the computational performance of the decision tree algorithm on datasets dominantly composed of categorical or textual features, which makes them very sparse, and on datasets that are more dense. We will compare the learning time between the decision tree learnt
 using a sparse csc matrix and a dense array.
-The first two experiments are on very sparse datasets, namely on the \emph{20 Newsgroups} dataset \cite{joachims1996probabilistic} and on the \emph{KDD cup 1999} dataset\cite{joachims1996probabilistic}. The \emph{20 Newsgroups} dataset
+The first two experiments are on very sparse datasets, namely on the \emph{20 Newsgroups} dataset \cite{joachims1996probabilistic} and on the \emph{KDD cup 1999} dataset\cite{bay2000archive}. The \emph{20 Newsgroups} dataset
 consists of $n=11314$ document on $20$ topics. Each text document was
 transformed into sparse tf-idf vectors of size $m=130107$ with a density of
 $0.001$. 
@@ -773,7 +863,7 @@ input space allows to speed up the learning by a factor between 800 and 900 time
 exactly to the same decision tree regressor structure and have the same generalization
 performance.
 
-Our dense datasets are the \emph{Adult} dataset\cite{joachims1996probabilistic} with a density of $0.12$, $n=32561$ instances and  $m=145$ features, and the \emph{TIC} dataset\cite{joachims1996probabilistic} with a density of $0.44$ and $n=4000$ instances and $m=85$ features. As Figure \ref{fig:adult} shows for shallower trees sparse threes are approximately learnt twice faster than their dense counterparts, but for fully grown threes it is the opposite. Finally as Figure \ref{fig:tic} shows designs threes are learnt faster by dense input data rather than by input data sparsely represented. 
+Our dense datasets are the \emph{Adult} dataset\cite{Bache+Lichman:2013} with a density of $0.12$, $n=32561$ instances and  $m=145$ features, and the \emph{TIC} dataset\cite{Bache+Lichman:2013} with a density of $0.44$ and $n=4000$ instances and $m=85$ features. As Figure \ref{fig:adult} shows for shallower trees sparse threes are approximately learnt twice faster than their dense counterparts, but for fully grown threes it is the opposite. Finally as Figure \ref{fig:tic} shows decison threes are learnt faster by dense input data rather than by input data sparsely represented. 
 
 
 
