@@ -1,0 +1,102 @@
+\section{Dense Input Data} \label{sec:background}
+\subsection{Induction of decision trees}
+
+We denote by $\mathcal{X}$ an input space and by $\mathcal{Y}$ the output space.
+Without loss of generality, we suppose that $\mathcal{X} = \mathcal{R}^m$ where
+$m$ denotes the number of features. Learning samples are represented by a pair of matrix
+$(X, Y) \subseteq (\mathcal{X}, \mathcal{Y})_{i=0}^{n-1}$, where each row
+corresponds to a sample and each column to a feature or an output variable.
+
+A decision trees \cite{breiman1984classification} is built  by recursively
+maximizing the average reduction of an impurity measure, such as the variance,
+\[
+\Delta{}I(s, \mathcal{L}) =
+I((Y_i)_{i \in \mathcal{L}}) -
+\frac{|\mathcal{L}_r|}{|\mathcal{L}|} I((Y_i)_{i \in \mathcal{L}_l}) -
+\frac{|\mathcal{L}_l|}{|\mathcal{L}|} I((Y_i)_{i \in \mathcal{L}_r}))
+\]
+where $s$ is a binary partition of the input space which divide the sample set
+$\mathcal{L}$ into $ \mathcal{L}_l$ and $ \mathcal{L}_r$. This recursive
+procedure is repeated until a stopping condition is met, e.g. a maximal depth
+is reached or there are too few samples to split. Those stopping criteria act
+as regularization parameters. Leaves are labeled by the output mean in
+regression or by the class frequencies in classification with reaching training
+samples. The recursive induction of the decision decision is described
+by Algorithm~\ref{algo:tree-induction} and the search for the best split
+is described by Algorithm~\ref{algo:find-best-split}. Note that sorting samples (Line~\ref{alg-line:sorting}) in a node along different features is at the core of Algorithm~\ref{algo:find-best-split}; it speeds up computation of the impurity measure for all possible splitting thresholds in an incremental manner. 
+
+In the context of ensemble, trees are further randomized by searching for the
+best split among $k$ features at each node and also might be induced on a
+bootstrap copy of the samples. The tree can be grown alternatively in a best-first
+search manner by replacing the stack of Algorithm~\ref{algo:tree-induction}
+by a priority queue where priority is defined by expected impurity reduction. 
+
+\begin{algorithm}\label{algo:tree-induction}
+Build a decision tree
+\textnormal{
+\begin{algorithmic}[1]
+\Function{InduceDecisionTree}{$X$, $Y$}
+    \State Initialize a tree structure $\tau$ with root node $t_0$
+    \State Initialize an empty stack $stack$
+    \State Initialize a sample set $\mathcal{L}=\{0,\ldots,n-1\}$
+    \State $stack$\Call{.push}{($t_0$, $\mathcal{L}$)}
+    \While{$stack$ is not empty}
+        \State $t_p$, $\mathcal{L}_p$ = $stack$\Call{.pop}{}()
+        \If{$t_p$ satisfies stopping criterion}
+            \State Make $t_p$ a leaf node using $\mathcal{L}_p$ and $Y$.
+        \Else
+            \State \begin{varwidth}[t]{0.8\linewidth}
+                   Find a splitting rule $s^*$ which maximizes impurity reduction
+                   among possible splitting rules: \\\\%$Q(\mathcal{L}_p, X)$:\\\\
+                   $
+                   s^* =  {FindBestSplit}(\mathcal{L}_p, X,Y)\\
+                   %\arg\max_{s \in Q(\mathcal{L}_p, X)} \Delta{}I(s, \mathcal{L}_p).
+                   $
+                   \end{varwidth}
+            \State Make $t_p$ an internal node given splitting rule $s$.
+            \State Partition $\mathcal{L}_p$ into $\mathcal{L}_r$ and
+                   $\mathcal{L}_l$ given $s^*$. \label{alg-line:partition}
+            \State Create two empty nodes $t_r$ and $t_l$ child of $t_p$.
+            \State $stack$\Call{.push}{($t_r$, $\mathcal{L}_r$)}
+            \State $stack$\Call{.push}{($t_l$, $\mathcal{L}_l$)}
+        \EndIf
+    \EndWhile
+    \State \Return $\tau$
+\EndFunction
+\end{algorithmic}
+}
+\end{algorithm}
+
+\begin{algorithm}\label{algo:find-best-split}
+Search for the best split
+\textnormal{
+\begin{algorithmic}[1]
+\Function{FindBestSplit}{$\mathcal{L}_p$, $X$, $Y$}
+    \State $\text{best} = -\infty$
+    \For{$j \in \{0, \ldots, m-1\}$}
+        \State Extract feature values reaching the node
+               \[
+               \mathcal{F}_j = \{X_{i,j}, \forall i \in \mathcal{L}_p\}.
+               \] \label{alg-line:value-extract}
+        \State Sort $\mathcal{L}_p$ and $\mathcal{F}_j$ by increasing values
+               of $\mathcal{F}_j$.  \label{alg-line:sorting}
+        \State Generate all possible splitting rules
+               \[
+               Q(\mathcal{F}_j)=\{((x_j \leq \nu), (x_j > \nu))| \nu \in \mathcal{F}_j)
+               \]
+        \For{$s$ in $Q(\mathcal{F}_j)$}
+            \State Evaluate impurity reduction of splitting rule $s$
+                   \[
+                   \text{score} = \Delta{}I(s, \mathcal{L}_p).
+                   \]
+            \If{$\text{score} > \text{best}$}
+                \State $\text{best} =\text{score}$
+                \State $s^* = s$
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \Return $s^*$
+\EndFunction
+\end{algorithmic}
+}
+\end{algorithm}

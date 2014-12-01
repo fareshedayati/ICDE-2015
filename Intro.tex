@@ -1,0 +1,51 @@
+\section{Introduction}
+% no \IEEEPARstart
+
+High dimensional supervised learning problems such as text or image annotation are common in many research and practical problems. Such problems require defining a mapping between the raw input space and a target vector space, where each dimension is called a feature to some categorical or numerical output variable.
+ A sample is a input-output pair. While those datasets have very high dimensional input space,
+they are often sparsely representable. For instance, the number of unique words
+associated to a text document is actually small compared to the number of words of a
+given language. In order to work efficiently with such data, efficient matrix
+formats have been developed with fast operations, such as dot product, and
+low memory footprints.
+
+Tree-based ensemble models, such as adaboost \cite{freund1995desicion}, random
+forest \cite{breiman2001random} or gradient tree boosting
+\cite{friedman2001greedy}, are some of the most robust and widely-used
+supervised machine learning. What all these methods have in common is that they use
+randomized decision trees as a base learner. This building block is a
+hierarchical model which divide the input space through a series of binary
+splitting rules which partition the input space. Predictions of a decision tree is obtained by
+following the tree structure until reaching a leaf. In the ensemble framework, those models are either averaged
+\cite{breiman2001random} or learnt sequentially \cite{freund1995desicion},
+\cite{friedman2001greedy}.
+
+Many models, such as linear or nearest neighbors model, could directly benefit
+from the input sparsity by formulating the entire algorithm through a set of
+dot products. However this is not possible for tree based methods, most machine
+learning packages don't support sparse input for tree-based methods, are
+restricted to decision stumps (decision tree with only one internal node) or
+have a sub-optimal implementation through the simulation of a random access
+memory as in the dense case. The only solution is often to densify the input
+space which leads first to severe memory constraints and then to slow
+training time.
+
+In this paper, we present an efficient splitting procedure tailored for
+numerical sparse input data in compressed sparse column format, a sparse matrix
+format. For a given subset of samples, we are able to efficiently extract non
+zero values for a given feature of this subset of samples. Knowing which
+elements are nonzero allows large speedup. It decreases sorting time of
+samples in the current node along features which is an essential component in
+all tree-based models. Moreover it reduces the set of possible splits to
+evaluate at each node. We also want to highlight that the contribution of this
+paper have been proposed for and merged in the  \emph{scikit-learn}
+\cite{buitinck2013api,pedregosa2011scikit} open source package. This will
+benefit the machine learning community.
+
+The rest of this paper is organized as follows: Section \ref{sec:background}
+introduces decision tree splitting algorithm and sparse matrix formats; Section
+\ref{sec:sparse-input-dt} describes the proposed splitting algorithm for sparse
+input data; Section \ref{sec:experiments} provides our empirical implementation
+study and Section \ref{sec:conclusion} concludes and describes further
+perspectives.
+

@@ -1,0 +1,262 @@
+\section{Sparse input data} \label{sec:sparse-input-dt}
+
+\subsection{Sparse matrix format}
+
+For memory efficiency and taking advantage of sparsity we use a data structure
+called compressed sparse column (csc) matrix format. It is a general format to
+represent compactly sparse matrices using three arrays: a $data$ array stores
+the value of each nonzero elements, an $indices$ array stores the row index
+of each nonzero elements and an $indptr$ array which stores the beginning and
+end of each columns in the $data$ and the $indices$ arrays.
+
+For instance, this $3 \times 5$ matrix
+\[
+\begin{bmatrix}
+1 & 0 & 0 & 4 & 0 \\
+0 & 0 & 0 & 5 & 0 \\
+0 & 0 & 0 & 0 & 0
+\end{bmatrix}
+\]
+is represented by the following csc matrix with arrays
+\begin{align*}
+inptr &= \begin{bmatrix}0 & 1 & 1 & 1 & 3 & 3\end{bmatrix}, \\
+indices &= \begin{bmatrix}0 & 0 & 1\end{bmatrix}, \\
+data &= \begin{bmatrix}1 & 4 & 5\end{bmatrix}.
+\end{align*}
+
+The main advantages of csc matrices are to allow fast column indexing, efficient
+arithmetic and matrix operations. However, row indexing is slow. Note that a
+similar row-based sparse matrix called compressed sparse row format also exists
+and works under similar principles.
+
+In order to grow decision trees on sparse input matrix, we have to require a
+sparse matrix format with efficient row indexing as the tree works with subset
+of the samples, and also efficient column indexing as features are randomly
+sampled at each node. Furthermore, we hope to speed up the overall algorithm by
+taking into account the input space sparsity. Compressed sparse column matrix
+already satisfies the fast column indexing requirement. We are going to show
+how to efficiently exploit the data structure as to have a fast row indexing
+and use the proposed approach to speed up the overall algorithm on sparse data. At the core of our proposed method is a fast sorting algorithm (a substitute for Line~\ref{alg-line:value-extract} in Algorithm~\ref{algo:find-best-split}) that works with non-zero values of a feature, sorts the positive and negative parts separately, and rearranges the sample set accordingly. 
+
+Given the sparse matrix format, the main issue is to efficiently perform the
+extraction of the sample values reaching the node (the line \ref{alg-line:value-extract}
+of Algorithm \ref{algo:find-best-split}). Note that this is the only operation which requires interaction
+with the input matrix data. Otherwise said for a given feature $j$, one have to be able to perform the intersection between the
+sample set $\mathcal{L}_p$ which have reached the node and the $m_j=indptr[j+1] -
+indptr[j]$ nonzero elements of the feature $j$ as to generate a set of
+possible splitting rules. If we assume that the $indices$ of the input csc matrix
+array are sorted per column, then standard intersection
+algorithms have the following time complexity:
+\begin{enumerate}
+\item in $O(|\mathcal{L}_p| \log{m_j})$ by performing $|\mathcal{L}_p| $ binary
+search on the sorted $m_j$ nonzero elements;
+\item in $O(|\mathcal{L}_p|\log{|\mathcal{L}_p|} + m_j\log{|\mathcal{L}_p|})$
+by sorting the sample set $\mathcal{L}_p$ and performing $m_j$ binary search on
+$\mathcal{L}_p$;
+\item in $O(|\mathcal{L}_p|\log{|\mathcal{L}_p|} + m_j + |\mathcal{L}_p|)$ by sorting the
+sample set $\mathcal{L}_p$ and retrieving the intersection by iterating over both
+arrays;
+\item in $O(m_j + |\mathcal{L}_p|)$ by first creating a temporary hash table from the
+one array and then checking if elements of the other array are contained
+in the hash table.
+\end{enumerate} 
+
+As explained below, we will be using a hybrid solution composed of a variation of approach (4) and approach (1).  In the context of decision tree induction, the intersection operation will be repeated for each sampled feature and for various sample sets $\mathcal{L}_p$.
+Taking this into account, it's possible to improve approach (4). The idea is to
+maintain during the tree growth a mapping, represented at Figure
+\ref{fig:mapping}, between the row index, the $indices$ array, of the csc
+matrix and the position of the related samples in the sample set array
+$\mathcal{L}$. Since each sample only belongs to one tree branch, a subset
+$\mathcal{L}_p$ of $\mathcal{L}$ can be conveniently represented by a slice
+$[start, end[$ of the array $\mathcal{L}$. Thus, it's possible to check in
+$O(1)$ if the $k$-th nonzero element of the csc matrix belongs to the sample set
+$\mathcal{L}_p$ by checking if $mapping[indices[k]]$ is in $[start, end[$.
+Maintaining the mapping for a given position $pos$ is done in $O(1)$ by
+setting $mapping[\mathcal{L}[pos]]$ to $pos$. Thus we deduce that performing
+the intersection between the $indices$ array and $\mathcal{L}_p$ can be
+done in $O(m_j)$.
+
+\begin{figure}
+  \centering
+   \def\svgwidth{0.4\textwidth}
+   \graphicspath{{images}}
+   \input{images/mapping.pdf_tex}
+   \caption{The array $mapping$ allow to efficiently compute the intersection between the $indices$ array of the csc matrix
+            and a sample set $\mathcal{L}_p$}
+   \label{fig:mapping}
+\end{figure}
+
+With the application of the mapping intersection algorithm, we can speed up the
+sorting operation and splitting rule evaluation of Algorithm~\ref{algo:find-best-split}
+by working separately on positive and negative values. Furthermore, it's also
+possible to partition a
+sample set $\mathcal{L}_p$ into two partition $\mathcal{L}_r$ and
+$\mathcal{L}_r$ (line~ \ref{alg-line:partition} of Algorithm~\ref{algo:tree-induction})
+given a split on feature $j$ in $O(m_j)$ instead of $O(n)$. For more details of this algorithm refer to Algorithm \ref{map}. 
+
+In practice, the number of nonzero elements $m_j$ of feature $j$ could be a
+lot bigger than the size of a sample set $\mathcal{L}_p$. This is likely to
+happen near the leaf nodes. Whenever the tree is fully developed, there are
+only a few   samples reaching those nodes. For optimal performance, one can use
+a hybrid intersection approach which combines the previously developed mapping
+intersection to approach (1) based on binary search. whenever $\mathcal{L}_p \ll
+m_j$, the binary approach will be faster. For more details of this algorithm refer to Algorithm \ref{bsearch}. 
+
+The hybrid algorithm switches between \ref{bsearch} and \ref{map} by the following rule:
+ \begin{equation}
+ \label{switch}
+ (1- sorted) \times |\mathcal{L}_p| \times \log(|\mathcal{L}_p|) + |\mathcal{L}_p| \times \log(m_j) < 0.1 m_j
+ \end{equation}
+where $sorted$ is $1$ if $\mathcal{L}_p$ is sorted and $0$ otherwise. Algorithm~\ref{map} is used whenever Equation~\ref{switch} is true and Algorithm~ \ref{bsearch} is used otherwise. 
+
+During the tree growth, one could remember which features are constant for a
+subset of the samples $\mathcal{L}_p$ and a given node $t_p$. For all
+descendant of node $t_p$, this will avoid the overhead of searching for a
+split where none exists for those features. 
+
+Finally note that for testing the sparse data is flattened for efficient random
+memory access.
+
+
+%
+%
+%if ((1 - is_samples_sorted[0]) * n_samples * log(n_samples) +
+%                n_samples * log(n_indices) < EXTRACT_NNZ_SWITCH * n_indices):
+%            extract_nnz_binary_search(self.X_indices, self.X_data,
+%                                      indptr_start, indptr_end,
+%                                      self.samples, self.start, self.end,
+%                                      self.index_to_samples,
+%                                      self.feature_values,
+%                                      end_negative, start_positive,
+%                                      self.sorted_samples, is_samples_sorted)
+%
+%        # Using an index to samples  technique to extract non zero values
+%        # index_to_samples is a mapping from X_indices to samples
+%        else:
+%            extract_nnz_index_to_samples(self.X_indices, self.X_data,
+%                                         indptr_start, indptr_end,
+%                                         self.samples, self.start, self.end,
+%                                         self.index_to_samples,
+%                                         self.feature_values,
+%                                         end_negative, start_positive)
+%
+
+%\begin{algorithm}\label{algo:extract_non_zero}
+%Extract nonzero values of the current node, and partition the positive and negative values. 
+%\textnormal{
+%\begin{algorithmic}[1]
+%\Function{ExtractNnz}{$\mathcal{L}_p$, $incides$, $indptr$, $mapping$, $j$, $start$, $end$, $samples\_sorted$}
+%    \State $m_j=indptr[j+1] - indptr[j]$
+%    \State $n\_sampels=|\mathcal{L}_p|$
+%    \State $R_j = (1- samples\_sorted) \times n\_samples \times \log(n\_samples) + n\_samples \times \log(m_j)$
+%    \If{$ R_j < 0.1 \times m_j$}
+%	    \State \Call{extract\_nnz\_binary\_search()}
+%    \Else 
+%	    \State \Call{extract\_nnz\_mapping()}
+%     \EndIf
+%\EndFunction
+%\end{algorithmic}
+%}
+%\end{algorithm}
+
+\begin{algorithm}\label{map}
+Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, via $mapping$, and return the positive and negative values separately. Note that at end the samples with negative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
+
+%\textnormal{
+\begin{algorithmic}[1]
+\Function{extract\_nnz\_mapping}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$}
+   \State {$positives$ = [ ]}
+    \State {$negatives$ = [ ]}
+    \State {$incides$ = X.indices}
+    \State {$indptr$ = X.indptr}
+    \State {$data$ = X.data}
+    
+%    \State $end_n$ = start (end of negatives)
+%    \State $start_p$ = end (start of positives)
+
+%    \For{$k \in [indptr[j] \mbox{:} indptr[j+1]]$}
+%    	\State $index = indices[k]$
+%        \State $value = data[k]$
+%         \If{$start\,\, \leq mapping[index] \,\, < \,\, end$}
+%            	\If {$value > 0$}
+%		\State $start_p \,\, -= 1$
+%		\State \Call{Swap}{$\mathcal{L}$,  $k$, $start_p$}
+%		\State $mapping[\mathcal{L}[k]] = k$
+%		\State $mapping[\mathcal{L}[start_n]] = start_p$
+%	         \Else
+%	         \State \Call{Swap}{$\mathcal{L}$,  $k$,$end_n$}
+%		\State $mapping[\mathcal{L}[k]] = k$
+%		\State $mapping[\mathcal{L}[end_n]] = end_n$
+%	        \State $end\_n \,\, += 1$
+%	        \EndIf
+%         \EndIf
+%     \EndFor
+
+    \For{$k \in [indptr[j] \mbox{:} indptr[j+1]]$}
+    	\State $index = indices[k]$
+        \State $value = data[k]$
+         \If{$start\,\, \leq mapping[index] \,\, < \,\, end$}
+         \State $h$ = $mapping[index]$
+            	\If {$value > 0$}
+	
+		\State $positives$.\Call{append}{$value$}
+		\State \Call{Swap}{$\mathcal{L}$,  $h$, $start_p$, $mapping$}
+	         \Else
+		\State $negative$.\Call{append}{$value$}
+	         \State \Call{Swap}{$\mathcal{L}$,  $h$, $end_n$, $mapping$}
+	        \State $end_n \,\, += 1$
+	        \EndIf
+         \EndIf
+     \EndFor
+        \State \Return {$(start, end_n), (start_p, end), positives, negatives$}
+\EndFunction
+\end{algorithmic}
+%}
+\end{algorithm}
+\begin{algorithm}\label{bsearch}
+Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, by a binary search, and return the positive and negative values separately. Note that at end the samples with negative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
+%\textnormal{
+\begin{algorithmic}[1]
+\Function{extract\_nnz\_bsearch}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$, $sorted$}
+    \State $positives$ = [ ]  
+    \State $negatives$ = [ ] 
+    \State $incides$ = X.indices
+    \State $indptr$ = X.indptr
+    \State $data$ = X.data
+    \State $indices_j = indices[indptr[j]:indptr[j+1]]$
+    \State $data_j= data[indptr[j]:indptr[j+1]]$
+     \If{$sorted=False$}
+    \State $\mathcal{L}$ = \Call{sort}{$\mathcal{L}$, start, end}
+    \EndIf 
+     \For{$h \in [start:end]$}
+	   \State $index$ = $\mathcal{L}[h]$
+     	   \State $i$ = \Call{BinarySearch}{$index$, $indices_j$}
+	   \State \# Returns the position of $index$ in  $indices_j$, 
+	   \State \# and -1 if it is not found.
+	   \If {$i \neq -1$ }
+	   	 \If{$data_j[i]  > 0$}
+		 \State $end_p \,\, -= 1$
+		\State $positives$.\Call{append}{$value$}
+		\State \Call{Swap}{$\mathcal{L}$,  $h$, $start_p$, $mapping$}
+	         \Else
+		\State $negative$.\Call{append}{$value$}
+	         \State \Call{Swap}{$\mathcal{L}$,  $h$, $end_n$, $mapping$}
+	        \State $end_n \,\, += 1$
+	        \EndIf
+        		\EndIf
+        \EndFor
+        \State \Return {$(start, end_n), (start_p, end), positives, negatives$}
+\EndFunction
+\end{algorithmic}
+%}
+\begin{algorithmic}[1]
+\Function{Swap}{$\mathcal{L}$, $pos_1$, $pos_2$, $mapping$}
+\State $\mathcal{L}[pos_1]$, $\mathcal{L}[pos_2]$ = $\mathcal{L}[pos_2]$, $\mathcal{L}[pos_1]$
+\State $mapping[\mathcal{L}[pos_1]] = pos_1$
+\State $mapping[\mathcal{L}[pos_2]] = pos_2$
+\EndFunction
+\end{algorithmic}
+%}
+\end{algorithm}
+
+
