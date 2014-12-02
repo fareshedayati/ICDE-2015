@@ -1,39 +1,62 @@
 \section{Introduction}
 % no \IEEEPARstart
 
-High dimensional supervised learning problems such as text or image
-annotation are common in many research and practical problems. Such
-problems require defining a mapping between the raw input space and a
-target vector space, where each dimension is called a feature to some
-categorical or numerical output variable.  A sample is a input-output
-pair. While those datasets have very high dimensional input space,
-they are often sparsely representable. For instance, the number of
-unique words associated to a text document is actually small compared
-to the number of words of a given language. In order to work
-efficiently with such data, efficient matrix formats have been
-developed with fast operations, such as dot product, and low memory
-footprints.
+%What is the problem?
+%Why is it interesting and important?
+%Why is it hard? (E.g., why do naive approaches fail?)
+%Why hasn't it been solved before? (Or, what's wrong with previous proposed solutions? How does mine differ?)
+%What are the key components of my approach and results? Also include any specific limitations.
 
-Tree-based ensemble models, such as adaboost \cite{freund1995desicion}, random
-forest \cite{breiman2001random} or gradient tree boosting
-\cite{friedman2001greedy}, are some of the most robust and widely-used
-supervised machine learning. What all these methods have in common is that they use
-randomized decision trees as a base learner. This building block is a
-hierarchical model which divide the input space through a series of binary
-splitting rules which partition the input space. Predictions of a decision tree is obtained by
-following the tree structure until reaching a leaf. In the ensemble framework, those models are either averaged
-\cite{breiman2001random} or learnt sequentially \cite{freund1995desicion},
-\cite{friedman2001greedy}.
+Decision trees provide simple predictive models that are widely used
+in machine learning and data mining for both classification and
+regression problems. Each decision tree leaf represents a particular
+label in a classification problem (or a particular scalar value in a
+regression problem) and the internal nodes of the tree represent
+conjunctions of features that lead into the tree leaves. Decision
+trees are popular not only because they are easy to interpret, but
+also because they provide the basic blocks of more sophisticated and
+powerful enseble methods such as Adaboost \cite{freund1995desicion},
+Random Forests~\cite{breiman2001random} or Gradient Tree
+Boosting~\cite{friedman2001greedy}. Such methods are usually the best
+performers in industry for both classificatin and regression tasks.
+%What all these
+%methods have in common is that they use randomized decision trees as a
+%base learner. 
 
-Many models, such as linear or nearest neighbors model, could directly benefit
-from the input sparsity by formulating the entire algorithm through a set of
-dot products. However this is not possible for tree based methods, most machine
-learning packages don't support sparse input for tree-based methods, are
-restricted to decision stumps (decision tree with only one internal node) or
-have a sub-optimal implementation through the simulation of a random access
-memory as in the dense case. The only solution is often to densify the input
-space which leads first to severe memory constraints and then to slow
-training time.
+Learning a decision tree over a training set is a recursive top-down
+procedure. In each step the procedure finds a splitting rule that
+partitions the underline space into two segments so that it maximizes
+some notion of information gain, i.e., it reduces the variability of
+the labels in the underlying (two) child nodes compared the parent
+node. The search for the optimal splitting rule makes the running time
+of each partition decision linear to the number of features and
+possible values in the training set.
+
+Such a cost make the use of tree-based methods prohibitive for high
+dimensional supervised learning problems such as text or image
+annotation that are common in many research and practical
+problems. Such problems require defining a mapping between the raw
+input space and a target vector space. For example, in text
+classification a document (raw input space) is usually mapped to a
+vector whose dimensions correspond to all of the possible words in a
+dictionary and the values of the vector elements are the determined by
+the frequency of the words in the document.  Although such vectors
+have many dimensions, they are often sparsely representable. For
+instance, the number of unique words associated to a text document is
+actually small compared to the number of words of a given language.
+
+Many models, such as linear or nearest neighbors model, could directly
+benefit from the input sparsity by formulating the entire algorithm
+through a set of dot products that can be computed fast with
+appropriate sparse vector representations. However, this is not
+possible for tree based methods, since the tree learning procedure
+cannot be expressed with dot products. Consequently, most machine
+learning packages don't support sparse input for tree-based methods,
+are restricted to decision stumps (decision tree with only one
+internal node) or have a sub-optimal implementation through the
+simulation of a random access memory as in the dense case. The only
+solution is often to densify the input space which leads first to
+severe memory constraints and then to slow training time.
 
 In this paper, we present an efficient splitting procedure tailored for
 numerical sparse input data in compressed sparse column format, a sparse matrix
