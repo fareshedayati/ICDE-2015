@@ -43,7 +43,7 @@ and use the proposed approach to speed up the overall algorithm on sparse data. 
 Given the sparse matrix format, the main issue is to efficiently perform the
 extraction of the sample values reaching the node (the line \ref{alg-line:value-extract}
 of Algorithm \ref{algo:find-best-split}). Note that this is the only operation which requires interaction
-with the input matrix data. Otherwise said for a given feature $j$, one have to be able to perform the intersection between the
+with the input matrix data. Otherwise said for a given feature $j$, one has to be able to perform the intersection between the
 sample set $\mathcal{L}_p$ which have reached the node and the $m_j=indptr[j+1] -
 indptr[j]$ nonzero elements of the feature $j$ as to generate a set of
 possible splitting rules. If we assume that the $indices$ of the input csc matrix
@@ -70,11 +70,11 @@ maintain during the tree growth a mapping, represented at Figure
 matrix and the position of the related samples in the sample set array
 $\mathcal{L}$. Since each sample only belongs to one tree branch, a subset
 $\mathcal{L}_p$ of $\mathcal{L}$ can be conveniently represented by a slice
-$[start, end[$ of the array $\mathcal{L}$. Thus, it's possible to check in
+$[start: end]$ of the array $\mathcal{L}$. Thus, it's possible to check in
 $O(1)$ if the $k$-th nonzero element of the csc matrix belongs to the sample set
-$\mathcal{L}_p$ by checking if $mapping[indices[k]]$ is in $[start, end[$.
-Maintaining the mapping for a given position $pos$ is done in $O(1)$ by
-setting $mapping[\mathcal{L}[pos]]$ to $pos$. Thus we deduce that performing
+$\mathcal{L}_p$ by checking if $mapping[indices[k]]$ is in $[start: end]$.
+Maintaining the mapping for a given position {\bf pos} is done in $O(1)$ by
+setting $mapping[\mathcal{L}[\text{\bf pos}]]$ to {\bf pos}. Thus we deduce that performing
 the intersection between the $indices$ array and $\mathcal{L}_p$ can be
 done in $O(m_j)$.
 
@@ -104,12 +104,12 @@ a hybrid intersection approach which combines the previously developed mapping
 intersection to approach (1) based on binary search. whenever $\mathcal{L}_p \ll
 m_j$, the binary approach will be faster. For more details of this algorithm refer to Algorithm \ref{bsearch}. 
 
-Our hybrid algorithm switches uses the binary search of Algorithm~\ref{bsearch} when the cost of approach (2) is smaller than $O(m_j)$. More specifically, the hybrid approach is controlled by the following rule: 
+Our hybrid algorithm uses the binary search of Algorithm~\ref{bsearch} when the cost of approach (2) is smaller than $O(m_j)$. More specifically, the hybrid approach is controlled by the following rule: 
  \begin{equation}
  \label{switch}
   |\mathcal{L}_p| \times \log(|\mathcal{L}_p|) + |\mathcal{L}_p| \times \log(m_j) < 0.1 m_j.
  \end{equation}
-Algorithm~\ref{map} is used whenever Equation~\ref{switch} is true and Algorithm~ \ref{bsearch} is used otherwise. This is exactly Algorithm~\ref{algo:sparse-split}. Note that $0.1$ is the found by empirical data.
+Algorithm~\ref{map} is used whenever Equation~\ref{switch} is true and Algorithm~ \ref{bsearch} is used otherwise. This is exactly Algorithm~\ref{algo:sparse-split}. Note that $0.1$ is optained empirically. 
 
 During the tree growth, one could remember which features are constant for a
 subset of the samples $\mathcal{L}_p$ and a given node $t_p$. For all
@@ -120,14 +120,14 @@ Finally note that for testing the sparse data is flattened for efficient random
 memory access.
 
 \subsection{The Optimal Split}
-The optimal split in sparsely representable data is a hybrid solution of two sorting algorithms that are well-suited for sparse csc matrices. The details of this algorithm is explained below in Algorithm \ref{algo:sparse-split}. 
+The optimal split in sparsely representable data is a hybrid solution of two sorting algorithms that are well-suited for sparse csc matrices. For a given feature $j$ the positive and negative values of the current node $\mathcal{L}_p$ are extracted and sorted in two different lists ($F_p$ and $N_p$ of Algorithm~\ref{algo:sparse-split}) with their corresponding indices rearranged in $\mathcal{L}_p$. Note that since there are significantly less nonzero values in sparse data, sorting the positive and negative values separately will be very cost effective. After sorting, the best threshold is sought separately in positive values and negative values. 
+The details of this algorithm is explained below in Algorithm \ref{algo:sparse-split}. 
 
 \begin{algorithm}\label{algo:sparse-split}
 Find the best split
 \begin{algorithmic}[1]
 \Function{FindBestSparseSplit}{$\mathcal{L}_p$}
    \State Let $[{start}:{end}]$ be such that $\mathcal{L}_p$ = $\mathcal{L}_{[{start}:{end}]}$
-    \State $S$ = $end - start$
     \State $\text{best} = -\infty$
     \For{$j \in \{0, \ldots, m-1\}$}
 	    \State $m_j$ = $indptr[j + 1] - indptr[j]$
@@ -163,7 +163,7 @@ Find the best split
 \end{algorithm}
 
 \begin{algorithm}\label{map}
-Sorts $X_{\mathcal{L}[start:end]}$ along the $jth$ feature by moving their indices in $\mathcal{L}[start:end]$ via $mapping$, and returns the sorted positive and negative values separately. 
+Sorts $X_{\mathcal{L}[start:end]}$ along the $jth$ feature by rearranging their indices in $\mathcal{L}[start:end]$ via $mapping$, and returns the sorted positive and negative values separately. 
 %\textnormal{
 \begin{algorithmic}[1]
 \Function{sort\_mapping}{$X$, $start$, $end$, $mapping$, $j$}
@@ -198,7 +198,7 @@ Sorts $X_{\mathcal{L}[start:end]}$ along the $jth$ feature by moving their indic
 %}
 \end{algorithm}
 \begin{algorithm}\label{bsearch}
-Sorts $X_{\mathcal{L}[start:end]}$ along the $jth$ feature by moving their indices in $\mathcal{L}[start:end]$, via a binary search, and returns the sorted positive and negative values separately. 
+Sorts $X_{\mathcal{L}[start:end]}$ along the $jth$ feature by rearranging their indices in $\mathcal{L}[start:end]$, via a binary search, and returns the sorted positive and negative values separately. 
 %\textnormal{
 \begin{algorithmic}[1]
 \Function{sort\_bsearch}{$X$, $start$, $end$, $mapping$, $j$}
