@@ -5,7 +5,9 @@ We denote by $\mathcal{X}$ an input space and by $\mathcal{Y}$ the output space.
 Without loss of generality, we suppose that $\mathcal{X} = \mathcal{R}^m$ where
 $m$ denotes the number of features and $\mathcal{Y} = \mathcal{R}$ in case of regression or $\mathcal{Y} = \{0, 1, \cdots, K-1\}$ in case of a $K$-$class$ classification. Learning samples are represented by a pair of matrices
 $(X, Y) \subseteq (\mathcal{X}, \mathcal{Y})_{i=0}^{n-1}$ with $n$ rows, where each row
-corresponds to a sample and each column to a feature or an output variable. For the ease of notation we let $\mathcal{L} = (X, Y)$. As we will see in the next section, impurity measure plays a crucial role in induction of decision trees. An impurity measure of a set of samples $\mathcal{L}$ measures the heterogeneity of the target variable of the samples. Variance of the target variable is used in regression, and Gini and cross-entropy are usually used in tree-based classification algorithms. Given $\mathcal{L}$, we let $\hat{p}_k$ be the empirical probability of class $k$ in this dataset. The Gini impurity measure is defined as: 
+corresponds to a sample and each column to a feature or an output variable. 
+
+In the process of decision tree induction we have to move samples around, instead of moving the actual rows of $(X,Y)$ we move their indices. For this purpose we introduce $\mathcal{L} = [0, 1, \cdots , n-1]$ which is the list of indices of $(X,Y)$. As we will see in the next section, impurity measure plays a crucial role in induction of decision trees. An impurity measure of a set of samples $\mathcal{L}$ measures the heterogeneity of the target variable of the samples. Variance of the target variable is used in regression, and Gini and cross-entropy are usually used in tree-based classification algorithms. Given $\mathcal{L}$, we let $\hat{p}_k$ be the empirical probability of class $k$ in this dataset. The Gini impurity measure is defined as: 
 
 \begin{equation}
 \label{gini}
@@ -32,12 +34,12 @@ where $s=\left(j, \, \theta\right)$ is a splitting rule composed of a feature in
 $\mathcal{L}$ into $ \mathcal{L}_l$ and $ \mathcal{L}_r$
 \begin{equation}
 \label{left}
-\mathcal{L}_l = \{ (X_i, Y_i) \in \mathcal{L} \, | \, X_{i,j} < \theta  \}, 
+\mathcal{L}_l = \{ i \in \mathcal{L} \, | \, X_{i,j} < \theta  \}, 
 \end{equation}
 and 
 \begin{equation}
 \label{right}
-\mathcal{L}_r = \{ (X_i, Y_i) \in \mathcal{L} \, | \, X_{i,j} \ge \theta  \}
+\mathcal{L}_r = \{ i \in \mathcal{L} \, | \, X_{i,j} \ge \theta  \}
 \end{equation}
 
 
@@ -77,7 +79,7 @@ Build a decision tree
                    %\arg\max_{s \in Q(\mathcal{L}_p, X)} \Delta{}I(s, \mathcal{L}_p).
                    $
                    \end{varwidth}
-            \State Make $t_p$ an internal node given splitting rule $s$.
+            \State Make $t_p$ an internal node by splitting rule $s$.
             \State Partition $\mathcal{L}_p$ into $\mathcal{L}_r$ and
                    $\mathcal{L}_l$ given $s^*$. \label{alg-line:partition}
             \State Create two empty nodes $t_r$ and $t_l$ child of $t_p$.
@@ -91,9 +93,9 @@ Build a decision tree
 }
 \end{algorithm}
 
-\subsection{Optimal Split}
+\subsection{The Optimal Split}
 
-Given a set of samples $\mathcal{L}_p$ the best splitting rule is computed by finding for each feature a threshold that can reduce the average impurity measure (Equation~\ref{red}) the most and taking the feature with its corresponding optimal threshold that has the best reduction among all features. For a given splitting rule $s = \left(j , \theta\right)$, the whole sample set needs to be traversed once for determining where each sample row belongs to, to the left (Equation~\ref{left}) or to the right node (Equation~\ref{right}). In order to avoid serval traversals, for a given feature $j$, the samples are sorted along the feature in an ascending order, and the impurity reduction is computed in an incremental way from the lowest value of feature $j$ to the highest value, treating each feature value as a threshold. As an example consider computing the impurity measure Gini (Equation~\ref{gini}) for all values of feature $j$. We can easily update Equation \ref{red} by keeping track of left node  $\mathcal{L}_l$ and right node  $\mathcal{L}_r$ class frequencies and updating them as we move from one threshold to the next, e.g. from $\theta = X_{i,j}$ $\theta = X_{i+1,j}$. In other words $\Delta{}I\left(s = (j,X_{i+1,j}), \mathcal{L}\right)$ can be easily computed by updating left node and right node class frequencies for $\theta = X_{i,j}$, and on top of them the empirical probabilities $\hat{p}_k$ and $|\mathcal{L}_l|$ and $|\mathcal{L}_r|$ of Equation~\ref{red}. For more details of this algorithm refer to Algorithm~\ref{algo:find-best-split} below. 
+Given a set of samples $\mathcal{L}_p$ the best splitting rule is computed by finding for each feature a threshold that can reduce the average impurity measure (Equation~\ref{red}) the most and taking the feature with its corresponding optimal threshold that has the best reduction among all features. For a given splitting rule $s = \left(j , \theta\right)$, the whole sample set needs to be traversed once for determining where each sample row belongs to, to the left (Equation~\ref{left}) or to the right node (Equation~\ref{right}). In order to avoid multiple traversals, for a given feature $j$, the samples are sorted along the feature in an ascending order, and the impurity reduction is computed in an incremental way from the lowest value of feature $j$ to the highest value, treating each feature value as a threshold. As an example consider computing the impurity measure Gini (Equation~\ref{gini}) for all values of feature $j$. We can easily update Equation \ref{red} by keeping track of left node  $\mathcal{L}_l$ and right node  $\mathcal{L}_r$ class frequencies and updating them as we move from one threshold to the next, e.g. from $\theta = X_{i,j}$ $\theta = X_{i+1,j}$. In other words $\Delta{}I\left(s = (j,X_{i+1,j}), \mathcal{L}\right)$ can be easily computed by updating left node and right node class frequencies for $\theta = X_{i,j}$, and on top of them the empirical probabilities $\hat{p}_k$ and $|\mathcal{L}_l|$ and $|\mathcal{L}_r|$ of Equation~\ref{red}. For more details of this algorithm refer to Algorithm~\ref{algo:find-best-split} below. 
 
 
 
@@ -121,7 +123,7 @@ Search for the best split
         %\For{$s$ in $Q(\mathcal{F}_j)$}
         \For{$\theta$ in ${F}_j$}
             \State $s$ = $\left(j, \theta\right)$
-            \State Evaluate impurity reduction of splitting rule $s$
+            \State Evaluate impurity reduction $s$
                    \[
                    \text{score} = \Delta{}I(s, \mathcal{L}_p).
                    \]

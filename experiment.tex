@@ -1,14 +1,11 @@
 \section{Experiments} \label{sec:experiments}
-\subsection{Density and Measurement}
 
-The density of a dataset is its percentage of nonzero values. As we will see below, the less dense the 
-
-We will compare the learning time between the decision tree learnt
-using a sparse csc matrix and a dense array.
+\subsection{Density}
+The density of a matrix $X$ is the percentage of its nonzero entries and the sparsity is the percentage of its zero entries. As we will see below training of decision trees on datasets that are quite sparse (with density below $0.01$) is significantly faster using our algorithm. Furthermore in the \emph{Synthetic Data} section we compare running time of decision trees with sparse csc matrices and dense arrays as a function of density. Note that in all the experiments below we made sure that both algorithms (induction of decision trees with a sparse csc matrix and the traditional induction of decision trees with dense arrays) lead exactly to the same model structure and have the same generalization performance.
 
 \subsection{Read Data}
 
-We will assess the computational performance of the decision tree algorithm on datasets dominantly composed of categorical or textual features, which makes them very sparse, and on datasets that are more dense. We will compare the learning time between the decision tree learnt
+In this section we will assess the computational performance of the decision tree algorithm on datasets composed dominantly of categorical or textual features, which makes them very sparse, and on datasets that are more dense. We will compare the learning time between the decision tree learnt
 using a sparse csc matrix and a dense array.
 The first two experiments are on very sparse datasets, namely on the \emph{20 Newsgroups} dataset \cite{joachims1996probabilistic} and on the \emph{KDD cup 1999} dataset\cite{bay2000archive}. The \emph{20 Newsgroups} dataset
 consists of $n=11314$ document on $20$ topics. Each text document was
@@ -21,13 +18,13 @@ input space allows to speed up the learning from 58 times for a fully grown
 tree up to 188 times for a decision stump. Furthermore, both algorithm leads
 exactly to the same decision tree structure and have the same generalization
 performance. The next dataset with low density is the \emph{KDD cup 1999} dataset which consists of $n=96367$ instances. The dataset contains both numerical and categorical data. The feature size of the dataset with categorical features transformed to binary features is $m=20025$ with an average density of
-$0.014$. Unlike the previous dataset the task for this dataset is regression. We will compare the learning time between the decision tree regressor learnt
+$0.014$. Unlike the previous dataset, the task at hand for this dataset is regression. We will compare the learning time between the decision tree regressor learnt
 using a sparse csc matrix and a dense array. As Figure \ref{fig:cup} shows taking into account the sparsity of the
-input space allows to speed up the learning by a factor between 800 and 900 times. Furthermore, both algorithm lead
+input space allows to speed up the learning by a factor between 800 and 900. Furthermore, both algorithm lead
 exactly to the same decision tree regressor structure and have the same generalization
 performance.
 
-Our dense datasets are the \emph{Adult} dataset\cite{Bache+Lichman:2013} with a density of $0.12$, $n=32561$ instances and  $m=145$ features, and the \emph{TIC} dataset\cite{Bache+Lichman:2013} with a density of $0.44$ and $n=4000$ instances and $m=85$ features. As Figure \ref{fig:adult} shows for shallower trees sparse threes are approximately learnt twice faster than their dense counterparts, but for fully grown threes it is the opposite. Finally as Figure \ref{fig:tic} shows decison threes are learnt faster by dense input data rather than by input data sparsely represented. 
+Our dense datasets are the \emph{Adult} dataset\cite{Bache+Lichman:2013} with a density of $0.12$, $n=32561$ instances and  $m=145$ features, and the \emph{TIC} dataset\cite{Bache+Lichman:2013} with a density of $0.44$ and $n=4000$ instances and $m=85$ features. As Figure \ref{fig:adult} shows for shallower trees sparse threes are approximately learnt twice faster than their dense counterparts, but for fully grown threes it is the opposite. Finally as Figure \ref{fig:tic} shows decision threes are learnt faster by dense input data rather than by input data sparsely represented. 
 
 
 \subsection{Synthetic Data}

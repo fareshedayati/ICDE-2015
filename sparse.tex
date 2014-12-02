@@ -19,9 +19,9 @@ For instance, this $3 \times 5$ matrix
 \]
 is represented by the following csc matrix with arrays
 \begin{align*}
-inptr &= \begin{bmatrix}0 & 1 & 1 & 1 & 3 & 3\end{bmatrix}, \\
+data &= \begin{bmatrix}1 & 4 & 5\end{bmatrix}, \\
 indices &= \begin{bmatrix}0 & 0 & 1\end{bmatrix}, \\
-data &= \begin{bmatrix}1 & 4 & 5\end{bmatrix}.
+inptr &= \begin{bmatrix}0 & 1 & 1 & 1 & 3 & 3\end{bmatrix}.
 \end{align*}
 
 The main advantages of csc matrices are to allow fast column indexing, efficient
@@ -160,13 +160,13 @@ memory access.
 %\end{algorithm}
 
 \begin{algorithm}\label{map}
-Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, via $mapping$, and return the positive and negative values separately. Note that at end the samples with negative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
+Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, via $mapping$, and push themnegative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
 
 %\textnormal{
 \begin{algorithmic}[1]
-\Function{extract\_nnz\_mapping}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$}
-   \State {$positives$ = [ ]}
-    \State {$negatives$ = [ ]}
+\Function{sort\_mapping}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$}
+   \State {$positives = [ ]$}
+    \State {$negatives = [ ]$}
     \State {$incides$ = X.indices}
     \State {$indptr$ = X.indptr}
     \State {$data$ = X.data}
@@ -208,7 +208,9 @@ Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, via $
 	        \EndIf
          \EndIf
      \EndFor
-        \State \Return {$(start, end_n), (start_p, end), positives, negatives$}
+        \State \Call{Sort}{$\mathcal{L}$, $start$, $end_n$}
+        \State \Call{Sort}{$\mathcal{L}$, $start_p$, $end$}
+%        \State \Return {$(start, end_n), (start_p, end), positives, negatives$}
 \EndFunction
 \end{algorithmic}
 %}
@@ -217,9 +219,9 @@ Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, via $
 Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, by a binary search, and return the positive and negative values separately. Note that at end the samples with negative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
 %\textnormal{
 \begin{algorithmic}[1]
-\Function{extract\_nnz\_bsearch}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$, $sorted$}
-    \State $positives$ = [ ]  
-    \State $negatives$ = [ ] 
+\Function{sort\_binary\_search}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$, $sorted$}
+    \State $positives = [ ]  $
+    \State $negatives = [ ] $
     \State $incides$ = X.indices
     \State $indptr$ = X.indptr
     \State $data$ = X.data
@@ -245,17 +247,29 @@ Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, by a 
 	        \EndIf
         		\EndIf
         \EndFor
-        \State \Return {$(start, end_n), (start_p, end), positives, negatives$}
+        \State \Call{Sort}{$\mathcal{L}$, $start$, $end_n$, $mapping$}
+        \State \Call{Sort}{$\mathcal{L}$, $start_p$, $end$, $mapping$}
+        %\State \Return {$(start, end_n), (start_p, end), positives, negatives$}
 \EndFunction
 \end{algorithmic}
 %}
 \begin{algorithmic}[1]
-\Function{Swap}{$\mathcal{L}$, $pos_1$, $pos_2$, $mapping$}
-\State $\mathcal{L}[pos_1]$, $\mathcal{L}[pos_2]$ = $\mathcal{L}[pos_2]$, $\mathcal{L}[pos_1]$
-\State $mapping[\mathcal{L}[pos_1]] = pos_1$
-\State $mapping[\mathcal{L}[pos_2]] = pos_2$
+\Function{Swap}{$\mathcal{L}$, $p_1$, $p_2$, $mapping$}
+\State $\mathcal{L}[pos_1]$, $\mathcal{L}[p_2]$ = $\mathcal{L}[p_2]$, $\mathcal{L}[p_1]$
+\State $mapping[\mathcal{L}[p_1]] = p_1$
+\State $mapping[\mathcal{L}[p_2]] = p_2$
 \EndFunction
 \end{algorithmic}
+
+\begin{algorithmic}[1]
+\Function{Sort}{$\mathcal{L}$, $p_1$, $p_2$, $mapping$}
+\State Sort $\mathcal{L}[p_1:p_2]$ in ascending order 
+ \For{$p \in [start:end]$}
+	\State $mapping[\mathcal{L}[p]] = p$
+ \EndFor
+\EndFunction
+\end{algorithmic}
+
 %}
 \end{algorithm}
 
