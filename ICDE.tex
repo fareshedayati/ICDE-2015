@@ -391,8 +391,8 @@ algorithms cannot scale to such datasets, since they include operations whose ru
 is a function of the input space size rather than a function of the non-zero input elements. %and
 %implementations have focused on tasks with dense input space, while at most
 %emulating random memory access on sparse input data. 
-In this paper, we propose an
-efficient splitting algorithm to leverage input sparsity within decision tree
+In this paper, we propose an efficient splitting algorithm to leverage
+input sparsity within decision tree
 methods. %We exploit the a-priori knowledge that each column has very few non-
 %zero elements and show how learning time is significantly decreased.
 Our algorithm improves training time over sparse datasets by more than
@@ -433,14 +433,17 @@ of \emph{scikit-learn}, the most popular open source Python machine learning lib
 \input{experiment.tex}
 
 \section{Conclusion}\label{sec:conclusion}
-We proposed a method for building tree-based models with sparse input support. 
-Our method takes advantage of input sparsity by avoiding sorting sample sets of a node along a feature unless they are nonzero at that feature. This approach speeds up training 
-substantially as sorting is a costly but essential and ubiquitous component of tree-based models. 
+We proposed a method for building tree-based models with sparse input
+support.  Our method takes advantage of input sparsity by avoiding
+sorting sample sets of a node along a feature unless they are nonzero
+at that feature. This approach speeds up training substantially as
+sorting is a costly but essential and ubiquitous component of
+tree-based models.
 
 \section{Acknowledgment} % use section* for acknowledgement
-Arnaud Joly is a research fellow of the FNRS,
-Belgium. This work is partially supported by PASCAL2 and the IUAP DYSCO, initiated by
-the Belgian State, Science Policy Office.
+Arnaud Joly is a research fellow of the FNRS, Belgium. This work is
+partially supported by PASCAL2 and the IUAP DYSCO, initiated by the
+Belgian State, Science Policy Office.
 
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
