@@ -104,12 +104,12 @@ a hybrid intersection approach which combines the previously developed mapping
 intersection to approach (1) based on binary search. whenever $\mathcal{L}_p \ll
 m_j$, the binary approach will be faster. For more details of this algorithm refer to Algorithm \ref{bsearch}. 
 
-The hybrid algorithm switches between \ref{bsearch} and \ref{map} by the following rule:
+Our hybrid algorithm switches uses the binary search of Algorithm~\ref{bsearch} when the cost of approach (2) is smaller than $O(m_j)$. More specifically, the hybrid approach is controlled by the following rule: 
  \begin{equation}
  \label{switch}
   |\mathcal{L}_p| \times \log(|\mathcal{L}_p|) + |\mathcal{L}_p| \times \log(m_j) < 0.1 m_j.
  \end{equation}
-Algorithm~\ref{map} is used whenever Equation~\ref{switch} is true and Algorithm~ \ref{bsearch} is used otherwise. This is Algorithm~\ref{algo:sparse-split}.
+Algorithm~\ref{map} is used whenever Equation~\ref{switch} is true and Algorithm~ \ref{bsearch} is used otherwise. This is exactly Algorithm~\ref{algo:sparse-split}. Note that $0.1$ is the found by empirical data.
 
 During the tree growth, one could remember which features are constant for a
 subset of the samples $\mathcal{L}_p$ and a given node $t_p$. For all
