@@ -38,6 +38,8 @@ already satisfies the fast column indexing requirement. We are going to show
 how to efficiently exploit the data structure as to have a fast row indexing
 and use the proposed approach to speed up the overall algorithm on sparse data. At the core of our proposed method is a fast sorting algorithm (a substitute for Line~\ref{alg-line:value-extract} in Algorithm~\ref{algo:find-best-split}) that works with non-zero values of a feature, sorts the positive and negative parts separately, and rearranges the sample set accordingly. 
 
+\subsection{Nonzero Values of $\mathcal{L}_p$}
+
 Given the sparse matrix format, the main issue is to efficiently perform the
 extraction of the sample values reaching the node (the line \ref{alg-line:value-extract}
 of Algorithm \ref{algo:find-best-split}). Note that this is the only operation which requires interaction
@@ -105,9 +107,9 @@ m_j$, the binary approach will be faster. For more details of this algorithm ref
 The hybrid algorithm switches between \ref{bsearch} and \ref{map} by the following rule:
  \begin{equation}
  \label{switch}
- (1- sorted) \times |\mathcal{L}_p| \times \log(|\mathcal{L}_p|) + |\mathcal{L}_p| \times \log(m_j) < 0.1 m_j
+  |\mathcal{L}_p| \times \log(|\mathcal{L}_p|) + |\mathcal{L}_p| \times \log(m_j) < 0.1 m_j.
  \end{equation}
-where $sorted$ is $1$ if $\mathcal{L}_p$ is sorted and $0$ otherwise. Algorithm~\ref{map} is used whenever Equation~\ref{switch} is true and Algorithm~ \ref{bsearch} is used otherwise. 
+Algorithm~\ref{map} is used whenever Equation~\ref{switch} is true and Algorithm~ \ref{bsearch} is used otherwise. This is Algorithm~\ref{algo:sparse-split}.
 
 During the tree growth, one could remember which features are constant for a
 subset of the samples $\mathcal{L}_p$ and a given node $t_p$. For all
@@ -117,81 +119,61 @@ split where none exists for those features.
 Finally note that for testing the sparse data is flattened for efficient random
 memory access.
 
+\subsection{The Optimal Split}
+The optimal split in sparsely representable data is a hybrid solution of two sorting algorithms that are well-suited for sparse csc matrices. The details of this algorithm is explained below in Algorithm \ref{algo:sparse-split}. 
 
-%
-%
-%if ((1 - is_samples_sorted[0]) * n_samples * log(n_samples) +
-%                n_samples * log(n_indices) < EXTRACT_NNZ_SWITCH * n_indices):
-%            extract_nnz_binary_search(self.X_indices, self.X_data,
-%                                      indptr_start, indptr_end,
-%                                      self.samples, self.start, self.end,
-%                                      self.index_to_samples,
-%                                      self.feature_values,
-%                                      end_negative, start_positive,
-%                                      self.sorted_samples, is_samples_sorted)
-%
-%        # Using an index to samples  technique to extract non zero values
-%        # index_to_samples is a mapping from X_indices to samples
-%        else:
-%            extract_nnz_index_to_samples(self.X_indices, self.X_data,
-%                                         indptr_start, indptr_end,
-%                                         self.samples, self.start, self.end,
-%                                         self.index_to_samples,
-%                                         self.feature_values,
-%                                         end_negative, start_positive)
-%
+\begin{algorithm}\label{algo:sparse-split}
+Find the best split
+\begin{algorithmic}[1]
+\Function{FindBestSparseSplit}{$\mathcal{L}_p$}
+   \State Let $[{start}:{end}]$ be such that $\mathcal{L}_p$ = $\mathcal{L}_{[{start}:{end}]}$
+    \State $S$ = $end - start$
+    \State $\text{best} = -\infty$
+    \For{$j \in \{0, \ldots, m-1\}$}
+	    \State $m_j$ = $indptr[j + 1] - indptr[j]$
+	    \If{$|\mathcal{L}_p| \log|\mathcal{L}_p| +|\mathcal{L}_p| \log(m_j) < 0.1\times m_j$}
+	    \State {$F_p, F_n$ = }
+	    \State \Call{sort\_bsearch}{$X$, $start$, $end$, $mapping$, $j$}
+	    \Else 
+	    \State {$F_p, F_n$ = }
+	    \State \Call{sort\_mapping}{$X$, $start$, $end$, $mapping$, $j$}
+	    \EndIf
+        \For{$\theta$ in ${F}_n$}
+            \State $s$ = $\left(j, \theta\right)$
+             \State $\text{score} = \Delta{}I(s, \mathcal{L}_{[start:end]})$.
+            \If{$\text{score} > \text{best}$}
+                \State $\text{best} =\text{score}$
+                \State $s^* = s$
+            \EndIf
+        \EndFor
+            \For{$\theta$ in ${F}_p$}
+            \State $s$ = $\left(j, \theta\right)$
+            \State $\text{score} = \Delta{}I(s, \mathcal{L}_{[start:end]})$.
+            \If{$\text{score} > \text{best}$}
+                \State $\text{best} =\text{score}$
+                \State $s^* = s$
+            \EndIf
+        \EndFor
 
-%\begin{algorithm}\label{algo:extract_non_zero}
-%Extract nonzero values of the current node, and partition the positive and negative values. 
-%\textnormal{
-%\begin{algorithmic}[1]
-%\Function{ExtractNnz}{$\mathcal{L}_p$, $incides$, $indptr$, $mapping$, $j$, $start$, $end$, $samples\_sorted$}
-%    \State $m_j=indptr[j+1] - indptr[j]$
-%    \State $n\_sampels=|\mathcal{L}_p|$
-%    \State $R_j = (1- samples\_sorted) \times n\_samples \times \log(n\_samples) + n\_samples \times \log(m_j)$
-%    \If{$ R_j < 0.1 \times m_j$}
-%	    \State \Call{extract\_nnz\_binary\_search()}
-%    \Else 
-%	    \State \Call{extract\_nnz\_mapping()}
-%     \EndIf
-%\EndFunction
-%\end{algorithmic}
+    \EndFor
+    \State \Return $s^*$
+\EndFunction
+\end{algorithmic}
 %}
-%\end{algorithm}
+\end{algorithm}
 
 \begin{algorithm}\label{map}
-Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, via $mapping$, and push themnegative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
-
+Sorts $X_{\mathcal{L}[start:end]}$ along the $jth$ feature by moving their indices in $\mathcal{L}[start:end]$ via $mapping$, and returns the sorted positive and negative values separately. 
 %\textnormal{
 \begin{algorithmic}[1]
-\Function{sort\_mapping}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$}
-   \State {$positives = [ ]$}
-    \State {$negatives = [ ]$}
+\Function{sort\_mapping}{$X$, $start$, $end$, $mapping$, $j$}
+    \State $F_p = [ ]  $
+    \State $F_n = [ ] $
+   \State $start_p$ = $end$ 
+    \State $end_n$ = $start$ 
     \State {$incides$ = X.indices}
     \State {$indptr$ = X.indptr}
     \State {$data$ = X.data}
-    
-%    \State $end_n$ = start (end of negatives)
-%    \State $start_p$ = end (start of positives)
-
-%    \For{$k \in [indptr[j] \mbox{:} indptr[j+1]]$}
-%    	\State $index = indices[k]$
-%        \State $value = data[k]$
-%         \If{$start\,\, \leq mapping[index] \,\, < \,\, end$}
-%            	\If {$value > 0$}
-%		\State $start_p \,\, -= 1$
-%		\State \Call{Swap}{$\mathcal{L}$,  $k$, $start_p$}
-%		\State $mapping[\mathcal{L}[k]] = k$
-%		\State $mapping[\mathcal{L}[start_n]] = start_p$
-%	         \Else
-%	         \State \Call{Swap}{$\mathcal{L}$,  $k$,$end_n$}
-%		\State $mapping[\mathcal{L}[k]] = k$
-%		\State $mapping[\mathcal{L}[end_n]] = end_n$
-%	        \State $end\_n \,\, += 1$
-%	        \EndIf
-%         \EndIf
-%     \EndFor
-
     \For{$k \in [indptr[j] \mbox{:} indptr[j+1]]$}
     	\State $index = indices[k]$
         \State $value = data[k]$
@@ -199,57 +181,57 @@ Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, via $
          \State $h$ = $mapping[index]$
             	\If {$value > 0$}
 	
-		\State $positives$.\Call{append}{$value$}
+		\State $F_p$.\Call{append}{$value$}
 		\State \Call{Swap}{$\mathcal{L}$,  $h$, $start_p$, $mapping$}
 	         \Else
-		\State $negative$.\Call{append}{$value$}
+		\State $F_n$.\Call{append}{$value$}
 	         \State \Call{Swap}{$\mathcal{L}$,  $h$, $end_n$, $mapping$}
 	        \State $end_n \,\, += 1$
 	        \EndIf
          \EndIf
      \EndFor
-        \State \Call{Sort}{$\mathcal{L}$, $start$, $end_n$}
-        \State \Call{Sort}{$\mathcal{L}$, $start_p$, $end$}
-%        \State \Return {$(start, end_n), (start_p, end), positives, negatives$}
+        \State \Call{Sort}{$F_n$, $\mathcal{L}$, $start$, $end_n$}
+        \State \Call{Sort}{$F_p$, $\mathcal{L}$, $start_p$, $end$}
+        \State \Return {$F_p, F_n$}
 \EndFunction
 \end{algorithmic}
 %}
 \end{algorithm}
 \begin{algorithm}\label{bsearch}
-Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, by a binary search, and return the positive and negative values separately. Note that at end the samples with negative values are pushed to the beginning of $\mathcal{L}[start:end]$ and the samples with positive values to its end. 
+Sorts $X_{\mathcal{L}[start:end]}$ along the $jth$ feature by moving their indices in $\mathcal{L}[start:end]$, via a binary search, and returns the sorted positive and negative values separately. 
 %\textnormal{
 \begin{algorithmic}[1]
-\Function{sort\_binary\_search}{$\mathcal{L}$, $X$, $mapping$, $j$, $start$, $end$, $sorted$}
-    \State $positives = [ ]  $
-    \State $negatives = [ ] $
+\Function{sort\_bsearch}{$X$, $start$, $end$, $mapping$, $j$}
+    \State $F_p = [ ]  $
+    \State $F_n = [ ] $ 
+    \State $start_p$ = $end$ 
+    \State $end_n$ = $start$ 
     \State $incides$ = X.indices
     \State $indptr$ = X.indptr
     \State $data$ = X.data
     \State $indices_j = indices[indptr[j]:indptr[j+1]]$
     \State $data_j= data[indptr[j]:indptr[j+1]]$
-     \If{$sorted=False$}
-    \State $\mathcal{L}$ = \Call{sort}{$\mathcal{L}$, start, end}
-    \EndIf 
+    \State $\mathcal{L}$ = \Call{sort}{$\mathcal{L}$, start, end} 
      \For{$h \in [start:end]$}
 	   \State $index$ = $\mathcal{L}[h]$
      	   \State $i$ = \Call{BinarySearch}{$index$, $indices_j$}
-	   \State \# Returns the position of $index$ in  $indices_j$, 
-	   \State \# and -1 if it is not found.
+	   \State Returns the position of $index$ in  $indices_j$, 
+	   \State and -1 if it is not found.
 	   \If {$i \neq -1$ }
 	   	 \If{$data_j[i]  > 0$}
 		 \State $end_p \,\, -= 1$
-		\State $positives$.\Call{append}{$value$}
+		\State $F_p$.\Call{append}{$value$}
 		\State \Call{Swap}{$\mathcal{L}$,  $h$, $start_p$, $mapping$}
 	         \Else
-		\State $negative$.\Call{append}{$value$}
+		\State $F_n$.\Call{append}{$value$}
 	         \State \Call{Swap}{$\mathcal{L}$,  $h$, $end_n$, $mapping$}
 	        \State $end_n \,\, += 1$
 	        \EndIf
         		\EndIf
         \EndFor
-        \State \Call{Sort}{$\mathcal{L}$, $start$, $end_n$, $mapping$}
-        \State \Call{Sort}{$\mathcal{L}$, $start_p$, $end$, $mapping$}
-        %\State \Return {$(start, end_n), (start_p, end), positives, negatives$}
+        \State \Call{Sort}{$F_n$, $\mathcal{L}$, $start$, $end_n$}
+        \State \Call{Sort}{$F_p$, $\mathcal{L}$, $start_p$, $end$}
+        \State \Return {$F_p, F_n$}
 \EndFunction
 \end{algorithmic}
 %}
@@ -262,9 +244,9 @@ Extract nonzero values of the current node, i.e. $\mathcal{L}[start:end]$, by a 
 \end{algorithmic}
 
 \begin{algorithmic}[1]
-\Function{Sort}{$\mathcal{L}$, $p_1$, $p_2$, $mapping$}
-\State Sort $\mathcal{L}[p_1:p_2]$ in ascending order 
- \For{$p \in [start:end]$}
+\Function{Sort}{$F$, $\mathcal{L}$, $p_1$, $p_2$, $mapping$}
+\State Sort $F$ and  $\mathcal{L}_{[p_1:p_2]}$ by increasing values of $F$
+ \For{$p \in [p_1:p_2]$}
 	\State $mapping[\mathcal{L}[p]] = p$
  \EndFor
 \EndFunction

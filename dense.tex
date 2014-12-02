@@ -31,7 +31,7 @@ splitting the sample set into to nodes by maximizing the average reduction of an
 \frac{|\mathcal{L}_l|}{|\mathcal{L}|} I({\mathcal{L}_r})\right)\right)
 \end{equation}
 where $s=\left(j, \, \theta\right)$ is a splitting rule composed of a feature index $j$ and a threshold value $\theta$ which divides the sample set into 
-$\mathcal{L}$ into $ \mathcal{L}_l$ and $ \mathcal{L}_r$
+$\mathcal{L}$ into $ \mathcal{L}_l$ and $ \mathcal{L}_r$ where 
 \begin{equation}
 \label{left}
 \mathcal{L}_l = \{ i \in \mathcal{L} \, | \, X_{i,j} < \theta  \}, 
@@ -61,7 +61,7 @@ by a priority queue where priority is defined by expected impurity reduction.
 Build a decision tree
 \textnormal{
 \begin{algorithmic}[1]
-\Function{InduceDecisionTree}{$X$, $Y$}
+\Function{InduceDecisionTree}{$\mathcal{L}$, $X$, $Y$}
     \State Initialize a tree structure $\tau$ with root node $t_0$
     \State Initialize an empty stack $stack$
     \State Initialize a sample set $\mathcal{L}=\{0,\ldots,n-1\}$
@@ -96,10 +96,6 @@ Build a decision tree
 \subsection{The Optimal Split}
 
 Given a set of samples $\mathcal{L}_p$ the best splitting rule is computed by finding for each feature a threshold that can reduce the average impurity measure (Equation~\ref{red}) the most and taking the feature with its corresponding optimal threshold that has the best reduction among all features. For a given splitting rule $s = \left(j , \theta\right)$, the whole sample set needs to be traversed once for determining where each sample row belongs to, to the left (Equation~\ref{left}) or to the right node (Equation~\ref{right}). In order to avoid multiple traversals, for a given feature $j$, the samples are sorted along the feature in an ascending order, and the impurity reduction is computed in an incremental way from the lowest value of feature $j$ to the highest value, treating each feature value as a threshold. As an example consider computing the impurity measure Gini (Equation~\ref{gini}) for all values of feature $j$. We can easily update Equation \ref{red} by keeping track of left node  $\mathcal{L}_l$ and right node  $\mathcal{L}_r$ class frequencies and updating them as we move from one threshold to the next, e.g. from $\theta = X_{i,j}$ $\theta = X_{i+1,j}$. In other words $\Delta{}I\left(s = (j,X_{i+1,j}), \mathcal{L}\right)$ can be easily computed by updating left node and right node class frequencies for $\theta = X_{i,j}$, and on top of them the empirical probabilities $\hat{p}_k$ and $|\mathcal{L}_l|$ and $|\mathcal{L}_r|$ of Equation~\ref{red}. For more details of this algorithm refer to Algorithm~\ref{algo:find-best-split} below. 
-
-
-
-
 
 
 
