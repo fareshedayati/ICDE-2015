@@ -1,11 +1,6 @@
 \section{Related Work}
 \label{sec:related}
 
-Decision tree learning.
-Hastie et al\cite{hastie:book2008} 
+The main contribution of this paper is on scaling up tree-based models in presence of large and sparsely representable data. Many researchers in the field of machine learning and statistics have contributed to the development of decision tree-based algorithms and their ensemble variables such as random forests and AdaBoost. Hastie et al\cite{hastie:book2008}, Friedman et al \cite{breiman1984classification}, Quinlan \cite{Quinlan:1993:CPM:152181} and Shapire et al \cite{Schapire99improvedboosting} are some of the main contributors of the field. Their work however did not address scalability. Apache Mahout Spark MLlib is one of the only projects that addresses this issue. They train random forests by building multiple decision trees in parallel \cite{das:blog2014}. The individual trees however do no scale \cite{Zaharia:2010:SCC:1863103.1863113}. There are Scalable implementations of other machine learning algorithms such as SVM and Logistic Regression, and LibLinear \cite{Chang:2011:LLS:1961189.1961199} is a good example. With our algorithm incorporated into \emph{scikit-learn} \cite{buitinck2013api}, the open source support scalability of tree-based algorithms on sparsely representable data. 
 
-Scalable open source implementations: Apache Mahout Spark Mlib
-
-Scalable implementations of other machine learning algorithms such as SVM and Logistic Regression: liblinear
-
-Parallel implementation of trees in Mlib \cite{das:blog2014}
+. 

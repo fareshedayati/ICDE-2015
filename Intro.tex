@@ -15,10 +15,10 @@ regression problem) and the internal nodes of the tree represent
 conjunctions of features that lead into the tree leaves. Decision
 trees are popular not only because they are easy to interpret, but
 also because they provide the basic blocks of more sophisticated and
-powerful enseble methods such as Adaboost \cite{freund1995desicion},
+powerful ensemble methods such as Adaboost \cite{freund1995desicion},
 Random Forests~\cite{breiman2001random} or Gradient Tree
 Boosting~\cite{friedman2001greedy}. Such methods are usually the best
-performers in industry for both classificatin and regression tasks.
+performers in industry for both classification and regression tasks.
 %What all these
 %methods have in common is that they use randomized decision trees as a
 %base learner. 
@@ -27,25 +27,25 @@ Learning a decision tree over a training set is a recursive top-down
 procedure. In each step the procedure finds a splitting rule that
 partitions the underline space into two segments so that it maximizes
 some notion of information gain, i.e., it reduces the variability of
-the labels in the underlying (two) child nodes compared the parent
+the labels in the underlying (two) child nodes compared to the parent
 node. The search for the optimal splitting rule makes the running time
 of each partition decision linear to the number of features and
 possible values in the training set.
 
 Such a cost make the use of tree-based methods prohibitive for high
 dimensional supervised learning problems such as text or image
-annotation that are common in many research and practical
+annotation that are common in many research and industrial
 problems. Such problems require defining a mapping between the raw
 input space and a target vector space. For example, in text
 classification a document (raw input space) is usually mapped to a
 vector whose dimensions correspond to all of the possible words in a
-dictionary and the values of the vector elements are the determined by
+dictionary and the values of the vector elements are determined by
 the frequency of the words in the document.  Although such vectors
 have many dimensions, they are often sparsely representable. For
 instance, the number of unique words associated to a text document is
 actually small compared to the number of words of a given language.
 
-Many models, such as linear or nearest neighbors model, could directly
+Many models, such as logistic regression or SVM, could directly
 benefit from the input sparsity by formulating the entire algorithm
 through a set of dot products that can be computed fast with
 appropriate sparse vector representations. However, this is not
@@ -73,7 +73,7 @@ benefit the machine learning community.
 The rest of this paper is organized as follows: Section \ref{sec:background}
 introduces decision tree splitting algorithm and sparse matrix formats; Section
 \ref{sec:sparse-input-dt} describes the proposed splitting algorithm for sparse
-input data; Section \ref{sec:experiments} provides our empirical implementation
-study and Section \ref{sec:conclusion} concludes and describes further
+input data; Section \ref{sec:experiments} summarizes the experiments carried out with the proposed algorithm comparing them to the traditional decision tree training algorithm
+and Section \ref{sec:conclusion} concludes and describes further
 perspectives.
 

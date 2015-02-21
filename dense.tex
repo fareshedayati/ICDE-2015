@@ -19,7 +19,8 @@ I(\mathcal{L}) = \sum_{k=0}^{K-1} \hat{p}_k \log\left(\hat{p}_k\right)
 Note that the impurity measure is maximized in case of uniform distribution of the target variable which makes $\mathcal{L}$ most heterogenous, i.e. $\hat{p}_k = \frac{1}{K}$. Moreover the impurity measure is minimized when the empirical probability is concentrated on one class while other classes have $\hat{p}_k = 0$. 
 
 \subsection{Training}
-A decision tree \cite{breiman1984classification} is built by recursively
+
+	A decision tree \cite{breiman1984classification} is built by recursively
 splitting the sample set into to nodes by maximizing the average reduction of an impurity measure: 
 \begin{equation}
 \label{red}
@@ -38,15 +39,13 @@ and
 \label{right}
 \mathcal{L}_r = \{ i \in \mathcal{L} \, | \, X_{i,j} \ge \theta  \}
 \end{equation}
-
-
 This recursive procedure is repeated until a stopping condition is met, e.g. a maximal depth
 is reached or there are too few samples to split. Those stopping criteria act
 as regularization parameters. Leaves are labeled by the output mean in
 regression or by the class frequencies in classification with reaching training
 samples. The recursive induction of the decision decision is described
 by Algorithm~\ref{algo:tree-induction} and the search for the best split
-is described by Algorithm~\ref{algo:find-best-split}. Note that sorting samples (Line~\ref{alg-line:sorting}) in a node along different features is at the core of Algorithm~\ref{algo:find-best-split}; it speeds up computation of the impurity measure for all possible splitting rules in an incremental manner. 
+is described by Algorithm~\ref{algo:find-best-split}. Note that sorting samples (Line~\ref{alg-line:sorting}) in a node along different features is at the core of Algorithm~\ref{algo:find-best-split}; it speeds up computation of the impurity measure for all possible splitting rules in an incremental manner. In Algorithm ~\ref{algo:tree-induction} below a stack is initially setup with a single element namely a pair of a root $t_0$ and the entire set of samples $\mathcal{L}$ (Line~5). Line~7 pops the next set of samples from the stack ($\mathcal{L}_p$) and splity it into two nodes, the left node $\mathcal{L}_l$ and and the right node $\mathcal{L}_r$, based on the best splitting rule obtained in Line~11. Note that this splitting is carried our recursively until the stopping criterion are met (Line~8,9) in which case the current node becomes a leaf.
 
 In the context of ensemble, trees are further randomized by searching for the
 best split among $k$ features at each node and also might be induced on a
@@ -92,7 +91,8 @@ Build a decision tree
 
 \subsection{The Optimal Split}
 
-Given a set of samples $\mathcal{L}_p$ the best splitting rule is computed by finding for each feature a threshold that can reduce the average impurity measure (Equation~\ref{red}) the most and at the end picking the feature with its corresponding optimal threshold that has the best reduction among all features. For a given splitting rule $s = \left(j , \theta\right)$, the whole sample set needs to be traversed once for determining where each sample row belongs to, to the left (Equation~\ref{left}) or to the right node (Equation~\ref{right}). To avoid multiple traversals, for a given feature $j$, the samples are sorted along the feature in an ascending order, and the impurity reduction is computed in an incremental way from the lowest value of feature $j$ to the highest value, treating each feature value as a threshold. As an example consider computing the impurity measure Gini (Equation~\ref{gini}) for all values of feature $j$. We can easily update Equation \ref{red} by keeping track of left node  $\mathcal{L}_l$ and right node  $\mathcal{L}_r$ class frequencies and updating them as we move from one threshold to the next, e.g. from $\theta = X_{i,j}$ to $\theta = X_{i+1,j}$. In other words $\Delta{}I\left(s = (j,X_{i+1,j}), \mathcal{L}\right)$ can be easily computed by updating left node and right node class frequencies for $\theta = X_{i,j}$, and on top of them the empirical probabilities $\hat{p}_k$ and $|\mathcal{L}_l|$ and $|\mathcal{L}_r|$ of Equation~\ref{red}. For more details of this algorithm refer to Algorithm~\ref{algo:find-best-split} below. 
+	Given a set of samples $\mathcal{L}_p$ the best splitting rule is computed by finding for each feature a threshold that can reduce the average impurity measure (Equation~\ref{red}) the most and at the end picking the feature with its corresponding optimal threshold that has the best reduction among all features. For a given splitting rule $s = \left(j , \theta\right)$, the whole sample set needs to be traversed once for determining where each sample row belongs to, to the left (Equation~\ref{left}) or to the right node (Equation~\ref{right}). To avoid multiple traversals, for a given feature $j$, the samples are sorted along the feature in an ascending order, and the impurity reduction is computed in an incremental way from the lowest value of feature $j$ to the highest value, treating each feature value as a threshold. As an example consider computing the impurity measure Gini (Equation~\ref{gini}) for all values of feature $j$. We can easily update Equation \ref{red} by keeping track of left node  $\mathcal{L}_l$ and right node  $\mathcal{L}_r$ class frequencies and updating them as we move from one threshold to the next, e.g. from $\theta = X_{i,j}$ to $\theta = X_{i+1,j}$. In other words $\Delta{}I\left(s = (j,X_{i+1,j}), \mathcal{L}\right)$ can be easily computed by updating left node and right node class frequencies for $\theta = X_{i,j}$, and on top of them the empirical probabilities $\hat{p}_k$ and $|\mathcal{L}_l|$ and $|\mathcal{L}_r|$ of Equation~\ref{red}. \\
+	In Algorithm~\ref{algo:find-best-split} below, Line~3 iterates over all features ranging from $0$ to $m$ creating a dataset $\mathcal{F}_j$ for each one of them. $\mathcal{F}_j$ is basically a collection of all values in column $j$ of the current node $\mathcal{L}_p$. The algorithm computes the impurity for each of the possible values in $\mathcal{F}_j$ in Lines~6 to 8. Line~10 keeps track of the best impurity reduction, and the corresponding rule (referred to $s^*$ in Line~11) which is a combination of a feature index $j$ and a threshold $\theta$. $s^*$ is the returned value of the algorithm and the best splitting rule.   %For more details of this algorithm refer to Algorithm~\ref{algo:find-best-split} below. 
 
 
 
